@@ -1,0 +1,48 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-server
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  mcp-filesystem:
+    build: ./mcp-server
+    container_name: mcp-filesystem-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./shared-data/context-files:/workspace
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  flask-app:
+    build: ./flask-app
+    container_name: flask-ai-interface
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./shared-data:/app/shared-data
+    environment:
+      - FLASK_ENV=production
+      - OLLAMA_HOST=http://ollama:11434
+      - MCP_SERVER_URL=http://mcp-filesystem:3000
+    depends_on:
+      - ollama
+      - mcp-filesystem
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<title>Local AI Stack Interface</title>
+				<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+	<body>
+		<header>
+			<div class="container">
+				<h1>Local AI Stack</h1>
+			</div>
+		</header>
+
+		<div class="container">
+			<div class="main-grid">
+				<!-- Left Panel: Model & File Management -->
+				<div class="panel">
+					<h2>Model Selection</h2>
+					<select id="modelSelect" class="model-select">
+						<option value="">Loading models...</option>
+					</select>
+
+					<h2>System Status</h2>
+					<div class="status">
+						<span class="status-dot" id="ollamaDot"></span>
+						<span>
+							Ollama: <span id="ollamaStatus">Checking...</span>
+						</span>
+					</div>
+					<div class="status">
+						<span class="status-dot" id="mcpDot"></span>
+						<span>
+							MCP Server: <span id="mcpStatus">Checking...</span>
+						</span>
+					</div>
+
+					<h2>Context Files</h2>
+					<div class="file-upload">
+						<div class="file-input-wrapper">
+							<input type="file" id="fileInput" accept=".txt,.md,.json,.csv">
+								<label for="fileInput" class="file-input-label">Upload File</label>
+							</div>
+					</div>
+					<div id="fileList" class="file-list">
+						<p>No files uploaded</p>
+					</div>
+				</div>
+
+				<!-- Center: Chat Interface -->
+				<div class="panel chat-container">
+					<div id="chatMessages" class="chat-messages">
+						<div class="message assistant">
+							<div class="message-header">
+								<span>Assistant</span>
+								<span>Ready</span>
+							</div>
+							<div class="message-content">
+								Hello! I'm your local AI assistant. Select a model from the left panel and start chatting. You can also upload context files to enhance our conversation.
+							</div>
+						</div>
+					</div>
+					<div class="chat-input">
+						<textarea id="messageInput" placeholder="Type your message here... (Ctrl+Enter to send)"></textarea>
+						<button id="sendButton">Send</button>
+					</div>
+				</div>
+
+				<!-- Right Panel: Chat History -->
+				<div class="panel">
+					<h2>Chat History</h2>
+					<div id="historyList" class="history-list">
+						<p>No chat history yet</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+	</body>
+</html>

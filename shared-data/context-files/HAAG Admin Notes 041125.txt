@@ -1,0 +1,54 @@
+HAAG Admin Notes 04/11/25
+
+Spring-Summer Transition
+- Development of PM Materials
+- Survey of Materials in Summer
+
+End of Semester Wrap-Up
+- End of Semester Seminar? Not Focus
+
+Onboarding and Recruitment
+- 32 Forms Pre-Look
+- Review Brees for Current Projects
+- Retention/Proceed Form for All students/advisors/faculty
+- Shortlist by comp advisors Existing and 
+- Advertisements for Existing/New Projects
+	- Stroud, Freeman, ++Faculty, Porto ~ Biocosmos, Alexander, Cannon-Placeholder
+
+>> Admin/Dir/Project Structure >> Need new admin team and comp advisors before Week 1 if possible, explain new people first.
+>> New Members, Admin Team, Comp Advisors
+>> Send Onboarding Materials get into Slack and Teams and Website Channels
+
+3 Blocks
+1: Community Engage: Engagement > Digital Comms > Team Expansion (Bio Informatics - Forward Planning)
+2: Operations: Talent Management/Recruitment, Team Cohesion, OSS
+3: Research Excellence: Ethics, Evaluation, Retention
+
+Role tasks role up to Directors: 
+Maintenance
+Strategy
+
+
+add git
+
+
+Tasks to complete prior to our first growth meeting: 
+- Identify Use-case PACE documentation and start encouraging HAAG members to develop the procedures
+-- Reponses to HAAG Slack?
+- Develop quality control guideline for these documents. 
+-- Automated Test Cases? 
+-- Update/Review Mandate for PAACE Feature Users
+-- Model Sample Use Case Documentation as Reference
+- Send first proof of concept document to Micheal Weiner and request his feedback on improving the format for submitting to PACE community  documentation
+-- WIP 
+-- Keep in both Git and Wiki?
+--- Wiki == how to get to and use Git and Pace. 
+--- Git docs == Pace Use Case Doc, Code and test cases. 
+- Brainstorm questions related to establishing standard for open source and ethics that you want to seek advice from the above contacts. 
+-- What is the data security protocol/policy for research data or information technology management policies more broadly at Georgia Tech? 
+-- What is the Intellectual Property policy for code and ideas developed via research at Georgia Tech? 
+-- Assumption/Confirmation: All Georgia Tech Community, Conduct, Academic Integrity policies apply to all members of HAAG. Please share all relevant policies. 
+-- What are external contributors relationship to these policies? 
+-- How should we capture the external contributors agreement? 
+-- What is the recommended process for each member to report misconduct? 
+

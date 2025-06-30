@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg-primary: #0a0e27;
     --bg-secondary: #151931;
     --bg-tertiary: #1e2341;
@@ -660,6 +660,254 @@ h1 {
     cursor: not-allowed;
 }
 
+/* Enhanced Message Layout */
+.enhanced-message {
+    border-left-width: 4px;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(37, 99, 235, 0.05) 100%);
+}
+
+.message-metadata {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.confidence-indicator {
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.confidence-indicator::before {
+    content: "●";
+    font-size: 1.2rem;
+}
+
+/* Deliberation Section */
+.deliberation-section {
+    margin-top: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    overflow: hidden;
+}
+
+.deliberation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.deliberation-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--system-accent);
+    font-size: 0.9rem;
+}
+
+.deliberation-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.deliberation-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.deliberation-toggle:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.chevron-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s;
+}
+
+.deliberation-content {
+    padding: 15px;
+    transition: all 0.3s ease;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.deliberation-content.collapsed {
+    max-height: 0;
+    padding: 0 15px;
+}
+
+.deliberation-item {
+    margin-bottom: 12px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.deliberation-item:last-child {
+    margin-bottom: 0;
+}
+
+.deliberation-item strong {
+    color: var(--accent-light-blue);
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Confidence Bar */
+.confidence-bar {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.confidence-text {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+/* Citations Section */
+.citations-section {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.citations-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: var(--accent-light-blue);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.citation-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.citations-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.citation-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    transition: all 0.3s;
+}
+
+.citation-item:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.citation-badge {
+    background: var(--accent-blue);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.system-citation .citation-badge {
+    background: var(--system-accent);
+}
+
+.citation-file {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Deliberation Indicator (Loading State) */
+.deliberation-indicator {
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin: 15px 0;
+    border: 1px solid var(--border-color);
+}
+
+.deliberation-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.stage {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    opacity: 0.5;
+    transition: all 0.5s ease;
+}
+
+.stage.active {
+    opacity: 1;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-light-blue) 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.stage-icon {
+    font-size: 1.5rem;
+    min-width: 30px;
+    text-align: center;
+}
+
+.stage-text {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.stage.active .stage-text {
+    font-weight: 600;
+}
+
 /* History Panel */
 .history-list {
     max-height: 600px;
@@ -694,6 +942,25 @@ h1 {
     text-overflow: ellipsis;
 }
 
+.history-confidence {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.75rem;
+}
+
+.confidence-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.confidence-value {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
 /* Loading Spinner */
 .spinner {
     border: 3px solid var(--border-color);
@@ -708,6 +975,27 @@ h1 {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Animation for deliberation expansion */
+@keyframes expandDeliberation {
+    from {
+        max-height: 0;
+        opacity: 0;
+    }
+    to {
+        max-height: 500px;
+        opacity: 1;
+    }
+}
+
+.deliberation-content:not(.collapsed) {
+    animation: expandDeliberation 0.3s ease-out;
+}
+
+/* Enhanced focus states */
+.deliberation-section:focus-within {
+    box-shadow: 0 0 0 2px var(--accent-blue);
 }
 
 /* Scrollbar Styling */
@@ -775,5 +1063,27 @@ h1 {
     
     .main-grid {
         gap: 15px;
+    }
+    
+    .deliberation-content {
+        padding: 12px;
+    }
+    
+    .deliberation-header {
+        padding: 10px 12px;
+    }
+    
+    .citations-list {
+        flex-direction: column;
+    }
+    
+    .citation-item {
+        justify-content: flex-start;
+    }
+    
+    .message-metadata {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
     }
 }

@@ -4,6 +4,7 @@ import requests
 import os
 import json
 from datetime import datetime
+import logging
 
 app = Flask(__name__)
 CORS(app)
@@ -50,6 +51,199 @@ DEFAULT_PRESETS = {
         "num_predict": -1
     }
 }
+
+# Enhanced RAG Pipeline with Deliberation
+class EnhancedRAGPipeline:
+    def __init__(self, ollama_host, mcp_server_url):
+        self.ollama_host = ollama_host
+        self.mcp_server_url = mcp_server_url
+        
+    def deliberate_and_respond(self, model, user_message, context_files, model_params):
+        """Two-stage RAG: deliberation then concrete response"""
+        
+        # Stage 1: Deliberation - analyze context and plan response
+        deliberation_result = self._deliberation_stage(model, user_message, context_files, model_params)
+        
+        # Stage 2: Concrete Response - generate final answer
+        final_response = self._response_stage(model, user_message, context_files, deliberation_result, model_params)
+        
+        return {
+            'deliberation': deliberation_result,
+            'response': final_response['content'],
+            'metadata': {
+                'context_files_used': final_response['context_files_used'],
+                'reasoning_trace': deliberation_result.get('reasoning_trace', ''),
+                'confidence_score': deliberation_result.get('confidence_score', 7),
+                'source_citations': final_response['citations']
+            }
+        }
+    
+    def _deliberation_stage(self, model, user_message, context_files, model_params):
+        """Stage 1: Analyze context and plan response approach"""
+        
+        context_content = self._load_context_files(context_files)
+        
+        deliberation_prompt = f"""
+You are in DELIBERATION MODE. Analyze the user's question and available context to plan your response.
+
+USER QUESTION: {user_message}
+
+AVAILABLE CONTEXT:
+{context_content}
+
+DELIBERATION TASKS:
+1. RELEVANCE ANALYSIS: Which context files are most relevant? Why?
+2. INFORMATION GAPS: What information is missing to fully answer the question?
+3. RESPONSE STRATEGY: What approach will best address the user's needs?
+4. CONFIDENCE ASSESSMENT: How confident can you be in your answer (1-10)?
+5. CITATION PLAN: Which specific sections should be cited?
+
+Provide a structured analysis in JSON format:
+{{
+    "relevant_files": ["file1.txt", "file2.md"],
+    "key_insights": ["insight1", "insight2"],
+    "information_gaps": ["gap1", "gap2"],
+    "response_strategy": "detailed explanation of approach",
+    "confidence_score": 8,
+    "reasoning_trace": "step-by-step thought process",
+    "citation_targets": [
+        {{"file": "file1.txt", "section": "relevant section", "reason": "supports main claim"}}
+    ]
+}}
+"""
+
+        # Use lower temperature for deliberation (more analytical)
+        deliberation_params = model_params.copy()
+        deliberation_params['temperature'] = max(0.3, model_params.get('temperature', 0.7) - 0.4)
+        
+        deliberation_response = self._call_ollama(model, deliberation_prompt, deliberation_params)
+        
+        try:
+            return json.loads(deliberation_response)
+        except:
+            # Fallback if JSON parsing fails
+            return {
+                "relevant_files": context_files,
+                "key_insights": ["Analysis pending"],
+                "information_gaps": [],
+                "response_strategy": "Direct response approach",
+                "confidence_score": 7,
+                "reasoning_trace": deliberation_response,
+                "citation_targets": []
+            }
+    
+    def _response_stage(self, model, user_message, context_files, deliberation, model_params):
+        """Stage 2: Generate concrete, well-structured response"""
+        
+        # Load only the most relevant context files identified in deliberation
+        relevant_files = deliberation.get('relevant_files', context_files)
+        focused_context = self._load_context_files(relevant_files)
+        
+        response_prompt = f"""
+You are now in RESPONSE MODE. Provide a clear, concrete answer to the user's question.
+
+USER QUESTION: {user_message}
+
+DELIBERATION INSIGHTS:
+- Response Strategy: {deliberation.get('response_strategy', '')}
+- Key Insights: {', '.join(deliberation.get('key_insights', []))}
+- Information Gaps: {', '.join(deliberation.get('information_gaps', []))}
+
+RELEVANT CONTEXT:
+{focused_context}
+
+RESPONSE REQUIREMENTS:
+1. Start with a direct answer to the user's question
+2. Provide supporting details from the context
+3. Cite specific sources using [File: filename] format
+4. Address any information gaps noted in deliberation
+5. Be concrete and actionable where possible
+6. End with next steps or recommendations if appropriate
+
+Generate a well-structured response that directly addresses the user's needs.
+"""
+
+        final_response = self._call_ollama(model, response_prompt, model_params)
+        
+        # Extract citations and metadata
+        citations = self._extract_citations(final_response, relevant_files)
+        
+        return {
+            'content': final_response,
+            'context_files_used': relevant_files,
+            'citations': citations
+        }
+    
+    def _load_context_files(self, context_files):
+        """Load and format context from files"""
+        context_content = ""
+        
+        for filename in context_files:
+            try:
+                response = requests.get(f"{self.mcp_server_url}/files/{filename}")
+                if response.ok:
+                    file_type = "SYSTEM" if self._is_system_file(filename) else "USER"
+                    context_content += f"\n--- [{file_type} FILE: {filename}] ---\n{response.text}\n"
+            except Exception as e:
+                logging.error(f"Error loading file {filename}: {e}")
+                
+        return context_content
+    
+    def _call_ollama(self, model, prompt, model_params):
+        """Make API call to Ollama"""
+        options = self._prepare_model_options(model_params)
+        
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "options": options
+        }
+        
+        try:
+            response = requests.post(f"{self.ollama_host}/api/generate", json=payload)
+            result = response.json()
+            return result.get('response', '')
+        except Exception as e:
+            logging.error(f"Ollama API error: {e}")
+            return "Error: Unable to generate response"
+    
+    def _prepare_model_options(self, model_params):
+        """Convert model parameters to Ollama options"""
+        options = {}
+        
+        if 'temperature' in model_params:
+            options['temperature'] = float(model_params['temperature'])
+        if 'top_p' in model_params:
+            options['top_p'] = float(model_params['top_p'])
+        if 'top_k' in model_params:
+            options['top_k'] = int(model_params['top_k'])
+        if 'repeat_penalty' in model_params:
+            options['repeat_penalty'] = float(model_params['repeat_penalty'])
+        if 'seed' in model_params and model_params['seed'] != -1:
+            options['seed'] = int(model_params['seed'])
+        if 'num_predict' in model_params and model_params['num_predict'] != -1:
+            options['num_predict'] = int(model_params['num_predict'])
+            
+        return options
+    
+    def _extract_citations(self, response_text, context_files):
+        """Extract citation information from response"""
+        citations = []
+        for filename in context_files:
+            if f"[File: {filename}]" in response_text or filename in response_text:
+                citations.append({
+                    'file': filename,
+                    'type': 'SYSTEM' if self._is_system_file(filename) else 'USER'
+                })
+        return citations
+    
+    def _is_system_file(self, filename):
+        """Check if file is a system file"""
+        return any(keyword in filename.lower() for keyword in SYSTEM_FILES)
+
+# Initialize enhanced RAG pipeline
+rag_pipeline = EnhancedRAGPipeline(OLLAMA_HOST, MCP_SERVER_URL)
 
 @app.route('/')
 def index():
@@ -143,33 +337,9 @@ def get_all_context_files():
     except:
         return []
 
-def prepare_model_options(model_params):
-    """Prepare Ollama model options from parameters"""
-    options = {}
-    
-    # Map frontend parameters to Ollama options
-    if 'temperature' in model_params:
-        options['temperature'] = float(model_params['temperature'])
-    
-    if 'top_p' in model_params:
-        options['top_p'] = float(model_params['top_p'])
-    
-    if 'top_k' in model_params:
-        options['top_k'] = int(model_params['top_k'])
-    
-    if 'repeat_penalty' in model_params:
-        options['repeat_penalty'] = float(model_params['repeat_penalty'])
-    
-    if 'seed' in model_params and model_params['seed'] != -1:
-        options['seed'] = int(model_params['seed'])
-    
-    if 'num_predict' in model_params and model_params['num_predict'] != -1:
-        options['num_predict'] = int(model_params['num_predict'])
-    
-    return options
-
 @app.route('/api/chat', methods=['POST'])
-def chat():
+def enhanced_chat():
+    """Enhanced chat endpoint with deliberation RAG pipeline"""
     data = request.json
     model = data.get('model', 'llama2')
     message = data.get('message', '')
@@ -185,98 +355,42 @@ def chat():
     # Combine user-selected files with system files, removing duplicates
     all_context_files = list(set(context_files + system_files))
     
-    # Build context from files
-    context = ""
-    context_file_count = 0
-    
-    if all_context_files:
-        for file in all_context_files:
-            try:
-                file_response = requests.get(f"{MCP_SERVER_URL}/files/{file}")
-                if file_response.ok:
-                    file_type = "SYSTEM" if is_system_file(file) else "USER"
-                    context += f"[{file_type} FILE: {file}]\n{file_response.text}\n\n"
-                    context_file_count += 1
-            except Exception as e:
-                print(f"Error loading file {file}: {e}")
-                continue
-    
-    # Prepare model options
-    options = prepare_model_options(model_params)
-    
     try:
-        # Use system/instruction format for better context awareness
-        if context:
-            system_prompt = f"""You are a helpful AI assistant with access to context files. Use the provided file contents to answer questions accurately and comprehensively.
-
-Context Information ({context_file_count} files loaded):
-{context}
-
-Instructions:
-- Reference specific files when relevant to your response
-- Distinguish between system files (administrative/configuration) and user files (project-specific)
-- Provide detailed, contextual answers based on the available information
-- If asked about something not covered in the context files, clearly state that limitation"""
-            
-            # Use the chat endpoint with proper formatting and options
-            payload = {
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": message}
-                ],
-                "stream": False
-            }
-            
-            # Add options if provided
-            if options:
-                payload["options"] = options
-                
-            response = requests.post(f"{OLLAMA_HOST}/api/chat", json=payload)
-            
-        else:
-            # Regular generate endpoint for no context
-            payload = {
-                "model": model,
-                "prompt": message,
-                "stream": False
-            }
-            
-            # Add options if provided
-            if options:
-                payload["options"] = options
-                
-            response = requests.post(f"{OLLAMA_HOST}/api/generate", json=payload)
+        # Use enhanced RAG pipeline
+        result = rag_pipeline.deliberate_and_respond(model, message, all_context_files, model_params)
         
-        result = response.json()
-        
-        # Extract response based on endpoint used
-        if 'message' in result:
-            response_text = result['message']['content']
-        else:
-            response_text = result.get('response', '')
-        
-        # Store in chat history with enhanced metadata
+        # Store enhanced chat history
         chat_entry = {
             "timestamp": datetime.now().isoformat(),
             "model": model,
             "message": message,
-            "response": response_text,
+            "response": result['response'],
+            "deliberation": result['deliberation'],
+            "metadata": result['metadata'],
             "context_files": all_context_files,
             "user_selected_files": context_files,
             "system_files": system_files,
             "model_params": model_params,
-            "context_file_count": context_file_count,
-            "ollama_options": options
+            "context_file_count": len(all_context_files)
         }
+        
         chat_history.append(chat_entry)
         
-        return jsonify(chat_entry)
+        return jsonify({
+            'response': result['response'],
+            'deliberation_summary': {
+                'confidence': result['deliberation'].get('confidence_score', 7),
+                'strategy': result['deliberation'].get('response_strategy', 'Standard approach'),
+                'files_used': result['metadata']['context_files_used']
+            },
+            'citations': result['metadata']['source_citations'],
+            'reasoning_available': True,
+            **chat_entry
+        })
         
     except Exception as e:
-        error_message = f"Error communicating with Ollama: {str(e)}"
-        print(error_message)
-        return jsonify({"error": error_message}), 500
+        logging.error(f"Enhanced chat error: {e}")
+        return jsonify({"error": f"Enhanced RAG error: {str(e)}"}), 500
 
 @app.route('/api/chat/history', methods=['GET'])
 def get_chat_history():
@@ -372,7 +486,7 @@ def mcp_status():
 
 @app.route('/api/system/info', methods=['GET'])
 def system_info():
-    """Provide information about system configuration"""
+    """Enhanced system information including RAG pipeline status"""
     try:
         all_files = get_all_context_files()
         system_files = [f for f in all_files if is_system_file(f)]
@@ -384,7 +498,13 @@ def system_info():
             "user_files": user_files,
             "system_file_keywords": SYSTEM_FILES,
             "saved_param_configs": len(saved_model_params),
-            "available_presets": list(DEFAULT_PRESETS.keys())
+            "available_presets": list(DEFAULT_PRESETS.keys()),
+            "rag_pipeline": {
+                "deliberation_enabled": True,
+                "two_stage_processing": True,
+                "citation_tracking": True,
+                "confidence_scoring": True
+            }
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

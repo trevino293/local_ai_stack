@@ -211,6 +211,7 @@ function handleParameterChange(paramName, value) {
     modelParams[paramName] = numericValue;
     updateParameterDisplays();
     clearActivePresetSelection();
+    clearActiveConfigurationSelection();
 }
 
 function setupPresetEventListeners() {
@@ -227,6 +228,7 @@ function applyParameterPreset(presetName) {
     if (presets[presetName]) {
         modelParams = { ...presets[presetName] };
         initializeModelParams();
+        clearActiveConfigurationSelection();
     }
 }
 
@@ -454,7 +456,7 @@ async function deleteContextFile(filename) {
     }
 }
 
-// Chat interface management
+// Enhanced chat interface management
 function handleMessageInput(event) {
     if (event.key === 'Enter' && event.ctrlKey) {
         sendMessage();
@@ -473,7 +475,8 @@ async function sendMessage() {
     addMessageToInterface('user', messageText);
     messageInput.value = '';
     
-    displayLoadingIndicator();
+    // Show deliberation indicator
+    displayDeliberationIndicator();
     
     try {
         const response = await fetch('/api/chat', {
@@ -491,17 +494,18 @@ async function sendMessage() {
         
         const responseData = await response.json();
         
-        removeLoadingIndicator();
+        removeDeliberationIndicator();
         
         if (responseData.error) {
             addMessageToInterface('assistant', `Error: ${responseData.error}`);
         } else {
-            addMessageToInterface('assistant', responseData.response);
+            // Add enhanced message with deliberation data
+            addEnhancedMessageToInterface('assistant', responseData);
             await loadChatHistory();
         }
     } catch (error) {
         console.error('Chat error:', error);
-        removeLoadingIndicator();
+        removeDeliberationIndicator();
         addMessageToInterface('assistant', 'Error: Failed to communicate with the AI service');
     } finally {
         sendButton.disabled = false;
@@ -532,21 +536,177 @@ function addMessageToInterface(role, content) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function displayLoadingIndicator() {
-    const loadingElement = document.createElement('div');
-    loadingElement.className = 'spinner';
-    loadingElement.id = 'loading-indicator';
-    document.getElementById('chatMessages').appendChild(loadingElement);
+function addEnhancedMessageToInterface(role, responseData) {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${role} enhanced-message`;
+    
+    // Message header with confidence indicator
+    const messageHeader = document.createElement('div');
+    messageHeader.className = 'message-header';
+    
+    const confidence = responseData.deliberation_summary?.confidence || 7;
+    const confidenceColor = confidence >= 8 ? '#10b981' : confidence >= 6 ? '#f59e0b' : '#ef4444';
+    
+    messageHeader.innerHTML = `
+        <span>${role === 'user' ? 'You' : 'Assistant'}</span>
+        <div class="message-metadata">
+            <span class="confidence-indicator" style="color: ${confidenceColor}">
+                Confidence: ${confidence}/10
+            </span>
+            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+        </div>
+    `;
+    
+    // Main response content
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageContent.textContent = responseData.response;
+    
+    // Deliberation summary (collapsible)
+    const deliberationSection = createDeliberationSection(responseData);
+    
+    // Citations section
+    const citationsSection = createCitationsSection(responseData.citations || []);
+    
+    messageElement.appendChild(messageHeader);
+    messageElement.appendChild(messageContent);
+    messageElement.appendChild(deliberationSection);
+    messageElement.appendChild(citationsSection);
+    
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function removeLoadingIndicator() {
-    const loadingElement = document.getElementById('loading-indicator');
-    if (loadingElement) {
-        loadingElement.remove();
+function createDeliberationSection(responseData) {
+    const deliberationSection = document.createElement('div');
+    deliberationSection.className = 'deliberation-section';
+    
+    const deliberationHeader = document.createElement('div');
+    deliberationHeader.className = 'deliberation-header';
+    deliberationHeader.innerHTML = `
+        <span class="deliberation-title">
+            <svg class="deliberation-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Reasoning Process
+        </span>
+        <button class="deliberation-toggle" onclick="toggleDeliberation(this)">
+            <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    `;
+    
+    const deliberationContent = document.createElement('div');
+    deliberationContent.className = 'deliberation-content collapsed';
+    
+    const summary = responseData.deliberation_summary || {};
+    
+    deliberationContent.innerHTML = `
+        <div class="deliberation-item">
+            <strong>Strategy:</strong> ${summary.strategy || 'Standard response approach'}
+        </div>
+        <div class="deliberation-item">
+            <strong>Files Analyzed:</strong> ${(summary.files_used || []).join(', ') || 'None'}
+        </div>
+        <div class="deliberation-item">
+            <strong>Confidence Level:</strong> 
+            <div class="confidence-bar">
+                <div class="confidence-fill" style="width: ${(summary.confidence || 7) * 10}%"></div>
+            </div>
+            <span class="confidence-text">${summary.confidence || 7}/10</span>
+        </div>
+    `;
+    
+    deliberationSection.appendChild(deliberationHeader);
+    deliberationSection.appendChild(deliberationContent);
+    
+    return deliberationSection;
+}
+
+function createCitationsSection(citations) {
+    if (!citations || citations.length === 0) return document.createElement('div');
+    
+    const citationsSection = document.createElement('div');
+    citationsSection.className = 'citations-section';
+    
+    const citationsHeader = document.createElement('div');
+    citationsHeader.className = 'citations-header';
+    citationsHeader.innerHTML = `
+        <svg class="citation-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clip-rule="evenodd"/>
+        </svg>
+        Sources Referenced
+    `;
+    
+    const citationsList = document.createElement('div');
+    citationsList.className = 'citations-list';
+    
+    citations.forEach(citation => {
+        const citationItem = document.createElement('div');
+        citationItem.className = `citation-item ${citation.type.toLowerCase()}-citation`;
+        citationItem.innerHTML = `
+            <span class="citation-badge">${citation.type}</span>
+            <span class="citation-file">${citation.file}</span>
+        `;
+        citationsList.appendChild(citationItem);
+    });
+    
+    citationsSection.appendChild(citationsHeader);
+    citationsSection.appendChild(citationsList);
+    
+    return citationsSection;
+}
+
+function toggleDeliberation(button) {
+    const content = button.closest('.deliberation-section').querySelector('.deliberation-content');
+    const icon = button.querySelector('.chevron-icon');
+    
+    content.classList.toggle('collapsed');
+    icon.style.transform = content.classList.contains('collapsed') ? '' : 'rotate(180deg)';
+}
+
+function displayDeliberationIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const deliberationElement = document.createElement('div');
+    deliberationElement.className = 'deliberation-indicator';
+    deliberationElement.id = 'deliberation-indicator';
+    
+    deliberationElement.innerHTML = `
+        <div class="deliberation-stages">
+            <div class="stage active">
+                <div class="stage-icon">🤔</div>
+                <div class="stage-text">Analyzing context...</div>
+            </div>
+            <div class="stage">
+                <div class="stage-icon">📝</div>
+                <div class="stage-text">Generating response...</div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(deliberationElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Simulate stage progression
+    setTimeout(() => {
+        const stages = deliberationElement.querySelectorAll('.stage');
+        stages[0].classList.remove('active');
+        stages[1].classList.add('active');
+    }, 2000);
+}
+
+function removeDeliberationIndicator() {
+    const deliberationElement = document.getElementById('deliberation-indicator');
+    if (deliberationElement) {
+        deliberationElement.remove();
     }
 }
 
-// Chat history management
+// Enhanced chat history management
 async function loadChatHistory() {
     try {
         const response = await fetch('/api/chat/history');
@@ -579,6 +739,19 @@ function createHistoryListItem(historyItem, index) {
     previewElement.className = 'history-preview';
     previewElement.textContent = historyItem.message.substring(0, 50) + '...';
     
+    // Add confidence indicator to history
+    if (historyItem.deliberation_summary?.confidence) {
+        const confidenceElement = document.createElement('div');
+        confidenceElement.className = 'history-confidence';
+        const confidence = historyItem.deliberation_summary.confidence;
+        const confidenceColor = confidence >= 8 ? '#10b981' : confidence >= 6 ? '#f59e0b' : '#ef4444';
+        confidenceElement.innerHTML = `
+            <span class="confidence-dot" style="background: ${confidenceColor}"></span>
+            <span class="confidence-value">${confidence}/10</span>
+        `;
+        historyElement.appendChild(confidenceElement);
+    }
+    
     historyElement.appendChild(timestampElement);
     historyElement.appendChild(previewElement);
     
@@ -593,7 +766,13 @@ function displayHistoryItem(index) {
     chatMessages.innerHTML = '';
     
     addMessageToInterface('user', historyItem.message);
-    addMessageToInterface('assistant', historyItem.response);
+    
+    // Display with deliberation data if available
+    if (historyItem.deliberation_summary) {
+        addEnhancedMessageToInterface('assistant', historyItem);
+    } else {
+        addMessageToInterface('assistant', historyItem.response);
+    }
 }
 
 // System status monitoring
@@ -633,72 +812,6 @@ function updateStatusIndicator(service, isOnline) {
         statusText.textContent = 'Offline';
         statusDot.classList.remove('online');
     }
-}
-
-// User feedback systems
-function showSaveParametersFeedback(success, errorMessage = null) {
-    const saveButton = document.getElementById('saveParams');
-    const originalText = saveButton.textContent;
-    
-    if (success) {
-        saveButton.textContent = 'Saved!';
-        saveButton.style.background = '#059669';
-        
-        setTimeout(() => {
-            saveButton.textContent = originalText;
-            saveButton.style.background = '';
-        }, 2000);
-    } else {
-        saveButton.textContent = 'Error';
-        saveButton.style.background = '#ef4444';
-        console.error('Parameter save error:', errorMessage);
-        
-        setTimeout(() => {
-            saveButton.textContent = originalText;
-            saveButton.style.background = '';
-        }, 2000);
-    }
-}
-
-function showParameterLoadFeedback(timestamp) {
-    if (timestamp) {
-        const loadTime = new Date(timestamp).toLocaleString();
-        console.log(`Parameters loaded from: ${loadTime}`);
-    }
-}
-
-function showUploadFeedback(success, message) {
-    const uploadLabel = document.querySelector('.file-input-label');
-    const originalText = uploadLabel.textContent;
-    
-    if (success) {
-        uploadLabel.textContent = `✓ ${message} uploaded`;
-        uploadLabel.style.background = '#10b981';
-    } else {
-        uploadLabel.textContent = `✗ ${message}`;
-        uploadLabel.style.background = '#ef4444';
-    }
-    
-    setTimeout(() => {
-        uploadLabel.textContent = originalText;
-        uploadLabel.style.background = '';
-    }, 3000);
-}
-
-function displaySystemError(message) {
-    console.error('System error:', message);
-    // Additional error display logic can be implemented here
-}
-
-// Utility functions
-function formatFileSize(bytes) {
-    const sizeUnits = ['B', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 B';
-    
-    const unitIndex = Math.floor(Math.log(bytes) / Math.log(1024));
-    const size = Math.round(bytes / Math.pow(1024, unitIndex) * 100) / 100;
-    
-    return `${size} ${sizeUnits[unitIndex]}`;
 }
 
 // Saved Configuration Management System
@@ -894,27 +1007,56 @@ function clearActiveConfigurationSelection() {
     updateActiveConfigurationDisplay();
 }
 
-// Enhanced parameter change handling
-function handleParameterChange(paramName, value) {
-    const numericValue = ['seed', 'num_predict', 'top_k'].includes(paramName) 
-        ? parseInt(value) 
-        : parseFloat(value);
+// User feedback systems
+function showSaveParametersFeedback(success, errorMessage = null) {
+    const saveButton = document.getElementById('saveParams');
+    const originalText = saveButton.textContent;
     
-    modelParams[paramName] = numericValue;
-    updateParameterDisplays();
-    clearActivePresetSelection();
-    clearActiveConfigurationSelection();
-}
-
-function applyParameterPreset(presetName) {
-    if (presets[presetName]) {
-        modelParams = { ...presets[presetName] };
-        initializeModelParams();
-        clearActiveConfigurationSelection();
+    if (success) {
+        saveButton.textContent = 'Saved!';
+        saveButton.style.background = '#059669';
+        
+        setTimeout(() => {
+            saveButton.textContent = originalText;
+            saveButton.style.background = '';
+        }, 2000);
+    } else {
+        saveButton.textContent = 'Error';
+        saveButton.style.background = '#ef4444';
+        console.error('Parameter save error:', errorMessage);
+        
+        setTimeout(() => {
+            saveButton.textContent = originalText;
+            saveButton.style.background = '';
+        }, 2000);
     }
 }
 
-// Enhanced feedback systems
+function showParameterLoadFeedback(timestamp) {
+    if (timestamp) {
+        const loadTime = new Date(timestamp).toLocaleString();
+        console.log(`Parameters loaded from: ${loadTime}`);
+    }
+}
+
+function showUploadFeedback(success, message) {
+    const uploadLabel = document.querySelector('.file-input-label');
+    const originalText = uploadLabel.textContent;
+    
+    if (success) {
+        uploadLabel.textContent = `✓ ${message} uploaded`;
+        uploadLabel.style.background = '#10b981';
+    } else {
+        uploadLabel.textContent = `✗ ${message}`;
+        uploadLabel.style.background = '#ef4444';
+    }
+    
+    setTimeout(() => {
+        uploadLabel.textContent = originalText;
+        uploadLabel.style.background = '';
+    }, 3000);
+}
+
 function showConfigurationSaveFeedback(success, message) {
     const saveButton = document.getElementById('saveNewConfigBtn');
     const originalText = saveButton.textContent;
@@ -935,9 +1077,6 @@ function showConfigurationSaveFeedback(success, message) {
 }
 
 function showConfigurationApplyFeedback(configName) {
-    console.log(`Applied configuration: ${configName}`);
-    
-    // Show brief visual feedback in the dropdown header
     const configTitle = document.querySelector('.config-title');
     const originalText = configTitle.textContent;
     
@@ -952,4 +1091,19 @@ function showConfigurationApplyFeedback(configName) {
 
 function showConfigurationDeleteFeedback(configName) {
     console.log(`Deleted configuration: ${configName}`);
+}
+
+function displaySystemError(message) {
+    console.error('System error:', message);
+}
+
+// Utility functions
+function formatFileSize(bytes) {
+    const sizeUnits = ['B', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 B';
+    
+    const unitIndex = Math.floor(Math.log(bytes) / Math.log(1024));
+    const size = Math.round(bytes / Math.pow(1024, unitIndex) * 100) / 100;
+    
+    return `${size} ${sizeUnits[unitIndex]}`;
 }

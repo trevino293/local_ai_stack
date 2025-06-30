@@ -149,7 +149,7 @@
 								<span>Assistant</span>
 								<span>Ready</span>
 							</div>
-							<div class="message-content">Hello! I'm your local AI assistant. Select a model and configure parameters using the gear icon, then start chatting. Upload context files to enhance our conversations.</div>
+							<div class="message-content">Hello! I'm your local AI assistant with enhanced reasoning capabilities. Select a model and configure parameters using the gear icon, then start chatting. Upload context files to enhance our conversations. I'll show you my thought process and confidence levels for each response.</div>
 						</div>
 					</div>
 					<div class="chat-input">
@@ -168,6 +168,16 @@
 			</div>
 		</div>
 
+		<script>
+			// Global function to handle deliberation toggle
+			function toggleDeliberation(button) {
+			const content = button.closest('.deliberation-section').querySelector('.deliberation-content');
+			const icon = button.querySelector('.chevron-icon');
+
+			content.classList.toggle('collapsed');
+			icon.style.transform = content.classList.contains('collapsed') ? '' : 'rotate(180deg)';
+			}
+		</script>
 		<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 	</body>
 </html>

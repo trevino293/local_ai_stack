@@ -38,7 +38,7 @@ A self-hosted AI chat interface featuring Ollama integration, MCP filesystem ser
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Flask Web UI  │────▶│  MCP Filesystem  │────▶│ Shared Storage  │
+│   Flask Web UI  │───▶│  MCP Filesystem  │────▶│ Shared Storage  │
 │   (Port 5000)   │     │   (Port 3000)    │     │ /context-files  │
 │                 │     │                  │     │                 │
 │ • Enhanced RAG  │     │ • File Upload    │     │ • System Files  │

@@ -15,7 +15,7 @@ MCP_SERVER_URL = os.getenv('MCP_SERVER_URL', 'http://localhost:3000')
 
 # System files that should always be included as context
 SYSTEM_FILES = [
-    'admin', 'system', 'default', 'config', 'haag', 'response-instructions'
+    'admin', 'system', 'default', 'config'
 ]
 
 # In-memory storage (in production, use a database)
@@ -52,20 +52,20 @@ DEFAULT_PRESETS = {
     }
 }
 
-# Enhanced RAG Pipeline with Deliberation
+# Enhanced RAG Pipeline with Deliberation and Conversation Context
 class EnhancedRAGPipeline:
     def __init__(self, ollama_host, mcp_server_url):
         self.ollama_host = ollama_host
         self.mcp_server_url = mcp_server_url
         
-    def deliberate_and_respond(self, model, user_message, context_files, model_params):
-        """Two-stage RAG: deliberation then concrete response"""
+    def deliberate_and_respond(self, model, user_message, context_files, model_params, conversation_history=None):
+        """Two-stage RAG: deliberation then concrete response with conversation context"""
         
         # Stage 1: Deliberation - analyze context and plan response
-        deliberation_result = self._deliberation_stage(model, user_message, context_files, model_params)
+        deliberation_result = self._deliberation_stage(model, user_message, context_files, model_params, conversation_history)
         
         # Stage 2: Concrete Response - generate final answer
-        final_response = self._response_stage(model, user_message, context_files, deliberation_result, model_params)
+        final_response = self._response_stage(model, user_message, context_files, deliberation_result, model_params, conversation_history)
         
         return {
             'deliberation': deliberation_result,
@@ -78,13 +78,36 @@ class EnhancedRAGPipeline:
             }
         }
     
-    def _deliberation_stage(self, model, user_message, context_files, model_params):
-        """Stage 1: Analyze context and plan response approach"""
+    def _format_conversation_history(self, chat_history, max_messages=5):
+        """Format recent chat history for context"""
+        if not chat_history:
+            return ""
+        
+        # Get recent messages (excluding current)
+        recent_messages = chat_history[-max_messages:]
+        
+        formatted_history = "\n--- CONVERSATION HISTORY ---\n"
+        for entry in recent_messages:
+            formatted_history += f"USER: {entry['message']}\n"
+            formatted_history += f"ASSISTANT: {entry['response']}\n\n"
+        
+        formatted_history += "--- END CONVERSATION HISTORY ---\n\n"
+        return formatted_history
+    
+    def _deliberation_stage(self, model, user_message, context_files, model_params, conversation_history=None):
+        """Stage 1: Analyze context and plan response approach with conversation awareness"""
         
         context_content = self._load_context_files(context_files)
         
+        # Format conversation history for deliberation
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = self._format_conversation_history(conversation_history)
+        
         deliberation_prompt = f"""
 You are in DELIBERATION MODE. Analyze the user's question and available context to plan your response.
+
+{conversation_context}
 
 USER QUESTION: {user_message}
 
@@ -92,14 +115,16 @@ AVAILABLE CONTEXT:
 {context_content}
 
 DELIBERATION TASKS:
-1. RELEVANCE ANALYSIS: Which context files are most relevant? Why?
-2. INFORMATION GAPS: What information is missing to fully answer the question?
-3. RESPONSE STRATEGY: What approach will best address the user's needs?
-4. CONFIDENCE ASSESSMENT: How confident can you be in your answer (1-10)?
-5. CITATION PLAN: Which specific sections should be cited?
+1. CONVERSATION CONTINUITY: How does this question relate to previous messages?
+2. RELEVANCE ANALYSIS: Which context files are most relevant? Why?
+3. INFORMATION GAPS: What information is missing to fully answer the question?
+4. RESPONSE STRATEGY: What approach will best address the user's needs?
+5. CONFIDENCE ASSESSMENT: How confident can you be in your answer (1-10)?
+6. CITATION PLAN: Which specific sections should be cited?
 
 Provide a structured analysis in JSON format:
 {{
+    "conversation_continuity": "how this relates to previous messages",
     "relevant_files": ["file1.txt", "file2.md"],
     "key_insights": ["insight1", "insight2"],
     "information_gaps": ["gap1", "gap2"],
@@ -123,6 +148,7 @@ Provide a structured analysis in JSON format:
         except:
             # Fallback if JSON parsing fails
             return {
+                "conversation_continuity": "Continuing conversation",
                 "relevant_files": context_files,
                 "key_insights": ["Analysis pending"],
                 "information_gaps": [],
@@ -132,15 +158,22 @@ Provide a structured analysis in JSON format:
                 "citation_targets": []
             }
     
-    def _response_stage(self, model, user_message, context_files, deliberation, model_params):
-        """Stage 2: Generate concrete, well-structured response"""
+    def _response_stage(self, model, user_message, context_files, deliberation, model_params, conversation_history=None):
+        """Stage 2: Generate concrete, well-structured response with conversation context"""
         
         # Load only the most relevant context files identified in deliberation
         relevant_files = deliberation.get('relevant_files', context_files)
         focused_context = self._load_context_files(relevant_files)
         
+        # Format conversation history if available
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = self._format_conversation_history(conversation_history)
+        
         response_prompt = f"""
 You are now in RESPONSE MODE. Provide a clear, concrete answer to the user's question.
+
+{conversation_context}
 
 USER QUESTION: {user_message}
 
@@ -153,14 +186,16 @@ RELEVANT CONTEXT:
 {focused_context}
 
 RESPONSE REQUIREMENTS:
-1. Start with a direct answer to the user's question
-2. Provide supporting details from the context
-3. Cite specific sources using [File: filename] format
-4. Address any information gaps noted in deliberation
-5. Be concrete and actionable where possible
-6. End with next steps or recommendations if appropriate
+1. Consider the conversation history when formulating your response
+2. Reference previous topics if relevant to the current question
+3. Start with a direct answer to the user's question
+4. Provide supporting details from the context
+5. Cite specific sources using [File: filename] format
+6. Address any information gaps noted in deliberation
+7. Be concrete and actionable where possible
+8. End with next steps or recommendations if appropriate
 
-Generate a well-structured response that directly addresses the user's needs.
+Generate a well-structured response that directly addresses the user's needs while maintaining conversation continuity.
 """
 
         final_response = self._call_ollama(model, response_prompt, model_params)
@@ -339,12 +374,15 @@ def get_all_context_files():
 
 @app.route('/api/chat', methods=['POST'])
 def enhanced_chat():
-    """Enhanced chat endpoint with deliberation RAG pipeline"""
+    """Enhanced chat endpoint with deliberation RAG pipeline and conversation context"""
     data = request.json
     model = data.get('model', 'llama2')
     message = data.get('message', '')
     context_files = data.get('context_files', [])
     model_params = data.get('model_params', {})
+    
+    # Get conversation ID or session identifier
+    conversation_id = data.get('conversation_id', 'default')
     
     # Get all available files
     all_files = get_all_context_files()
@@ -356,12 +394,27 @@ def enhanced_chat():
     all_context_files = list(set(context_files + system_files))
     
     try:
-        # Use enhanced RAG pipeline
-        result = rag_pipeline.deliberate_and_respond(model, message, all_context_files, model_params)
+        # Get recent conversation history for this session
+        # Filter by conversation_id if you implement multiple conversations
+        conversation_messages = [
+            entry for entry in chat_history 
+            if entry.get('conversation_id', 'default') == conversation_id
+        ]
+        conversation_history = conversation_messages[-10:]  # Last 10 messages for context
+        
+        # Use enhanced RAG pipeline with conversation context
+        result = rag_pipeline.deliberate_and_respond(
+            model, 
+            message, 
+            all_context_files, 
+            model_params,
+            conversation_history=conversation_history
+        )
         
         # Store enhanced chat history
         chat_entry = {
             "timestamp": datetime.now().isoformat(),
+            "conversation_id": conversation_id,
             "model": model,
             "message": message,
             "response": result['response'],
@@ -381,10 +434,12 @@ def enhanced_chat():
             'deliberation_summary': {
                 'confidence': result['deliberation'].get('confidence_score', 7),
                 'strategy': result['deliberation'].get('response_strategy', 'Standard approach'),
-                'files_used': result['metadata']['context_files_used']
+                'files_used': result['metadata']['context_files_used'],
+                'conversation_continuity': result['deliberation'].get('conversation_continuity', 'New conversation')
             },
             'citations': result['metadata']['source_citations'],
             'reasoning_available': True,
+            'conversation_id': conversation_id,
             **chat_entry
         })
         
@@ -396,12 +451,16 @@ def enhanced_chat():
 def get_chat_history():
     """Get chat history with optional filtering"""
     model_filter = request.args.get('model')
+    conversation_filter = request.args.get('conversation_id')
     limit = request.args.get('limit', type=int)
     
     filtered_history = chat_history
     
     if model_filter:
-        filtered_history = [h for h in chat_history if h.get('model') == model_filter]
+        filtered_history = [h for h in filtered_history if h.get('model') == model_filter]
+    
+    if conversation_filter:
+        filtered_history = [h for h in filtered_history if h.get('conversation_id', 'default') == conversation_filter]
     
     if limit:
         filtered_history = filtered_history[-limit:]
@@ -414,6 +473,44 @@ def clear_chat_history():
     global chat_history
     chat_history = []
     return jsonify({"message": "Chat history cleared successfully"})
+
+@app.route('/api/chat/conversations', methods=['GET'])
+def get_conversations():
+    """Get list of conversation sessions"""
+    conversations = {}
+    for entry in chat_history:
+        conv_id = entry.get('conversation_id', 'default')
+        if conv_id not in conversations:
+            conversations[conv_id] = {
+                'id': conv_id,
+                'last_activity': entry['timestamp'],
+                'message_count': 0,
+                'first_message': entry['message'][:50] + '...'
+            }
+        conversations[conv_id]['message_count'] += 1
+        if entry['timestamp'] > conversations[conv_id]['last_activity']:
+            conversations[conv_id]['last_activity'] = entry['timestamp']
+    
+    return jsonify(list(conversations.values()))
+
+@app.route('/api/chat/conversations/<conversation_id>', methods=['GET'])
+def get_conversation_history(conversation_id):
+    """Get history for a specific conversation"""
+    conversation_messages = [
+        entry for entry in chat_history 
+        if entry.get('conversation_id', 'default') == conversation_id
+    ]
+    return jsonify(conversation_messages)
+
+@app.route('/api/chat/conversations/<conversation_id>', methods=['DELETE'])
+def clear_conversation(conversation_id):
+    """Clear specific conversation history"""
+    global chat_history
+    chat_history = [
+        entry for entry in chat_history 
+        if entry.get('conversation_id', 'default') != conversation_id
+    ]
+    return jsonify({"message": f"Conversation {conversation_id} cleared successfully"})
 
 @app.route('/api/files', methods=['GET'])
 def list_files():
@@ -503,7 +600,8 @@ def system_info():
                 "deliberation_enabled": True,
                 "two_stage_processing": True,
                 "citation_tracking": True,
-                "confidence_scoring": True
+                "confidence_scoring": True,
+                "conversation_context": True
             }
         })
     except Exception as e:

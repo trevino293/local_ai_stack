@@ -143,13 +143,14 @@
 
 				<!-- Center: Chat Interface -->
 				<div class="panel chat-container">
+					<h2>Chat Interface</h2>
 					<div id="chatMessages" class="chat-messages">
 						<div class="message assistant">
 							<div class="message-header">
 								<span>Assistant</span>
 								<span>Ready</span>
 							</div>
-							<div class="message-content">Hello! I'm your local AI assistant with enhanced reasoning capabilities. Select a model and configure parameters using the gear icon, then start chatting. Upload context files to enhance our conversations. I'll show you my thought process and confidence levels for each response.</div>
+							<div class="message-content">Hello! I'm your local AI assistant with enhanced reasoning capabilities and conversation memory. Select a model and configure parameters using the gear icon, then start chatting. Upload context files to enhance our conversations. I'll show you my thought process, confidence levels, and maintain context throughout our conversation.</div>
 						</div>
 					</div>
 					<div class="chat-input">
@@ -158,9 +159,39 @@
 					</div>
 				</div>
 
-				<!-- Right Panel: Chat History -->
+				<!-- Right Panel: Chat History & Conversation Management -->
 				<div class="panel">
-					<h2>Chat History</h2>
+					<div class="history-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+						<h2 style="margin: 0;">Chat History</h2>
+						<button id="clearHistoryBtn" style="
+							background: var(--error);
+							color: white;
+							border: none;
+							padding: 6px 12px;
+							border-radius: 4px;
+							cursor: pointer;
+							font-size: 0.8rem;
+							transition: background 0.3s;
+						" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--error)'">
+							Clear All
+						</button>
+					</div>
+
+					<div class="conversation-info" style="
+						background: var(--bg-tertiary);
+						padding: 10px;
+						border-radius: 6px;
+						margin-bottom: 15px;
+						border: 1px solid var(--border-color);
+					">
+						<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">
+							Current Conversation
+						</div>
+						<div id="conversationStatus" style="font-size: 0.9rem; color: var(--text-primary);">
+							Active Session
+						</div>
+					</div>
+
 					<div id="historyList" class="history-list">
 						<p>No chat history yet</p>
 					</div>
@@ -177,6 +208,41 @@
 			content.classList.toggle('collapsed');
 			icon.style.transform = content.classList.contains('collapsed') ? '' : 'rotate(180deg)';
 			}
+
+			// Add clear history functionality
+			document.addEventListener('DOMContentLoaded', function() {
+			document.getElementById('clearHistoryBtn').addEventListener('click', async function() {
+			if (confirm('Clear all chat history? This action cannot be undone.')) {
+			try {
+			const response = await fetch('/api/chat/history', {
+			method: 'DELETE'
+			});
+
+			if (response.ok) {
+			document.getElementById('historyList').innerHTML = '<p>No chat history yet</p>';
+			document.getElementById('chatMessages').innerHTML = `
+			<div class="message assistant">
+				<div class="message-header">
+					<span>Assistant</span>
+					<span>Ready</span>
+				</div>
+				<div class="message-content">Chat history cleared. How can I help you?</div>
+			</div>
+			`;
+			// Reset conversation state
+			currentConversationId = 'default';
+			conversationState = 'new';
+			updateConversationUI();
+			} else {
+			alert('Failed to clear chat history');
+			}
+			} catch (error) {
+			console.error('Error clearing history:', error);
+			alert('Error occurred while clearing history');
+			}
+			}
+			});
+			});
 		</script>
 		<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 	</body>

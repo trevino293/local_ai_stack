@@ -5,6 +5,8 @@ let systemFiles = [];
 let chatHistory = [];
 let savedConfigurations = [];
 let currentActiveConfig = null;
+let currentConversationId = 'default';
+let conversationState = 'active'; // 'active', 'new', 'loading'
 
 // Model parameters with comprehensive preset system
 let modelParams = {
@@ -49,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApplication();
     setupEventListeners();
     startSystemMonitoring();
+    addNewConversationButton();
+    restoreConversationState();
 });
 
 async function initializeApplication() {
@@ -107,6 +111,103 @@ function setupEventListeners() {
 function startSystemMonitoring() {
     // Monitor system status every 10 seconds
     setInterval(checkSystemStatus, 10000);
+}
+
+// Conversation management functions
+function startNewConversation() {
+    currentConversationId = 'conv_' + Date.now();
+    conversationState = 'new';
+    
+    // Clear current chat display
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = '';
+    
+    // Add welcome message
+    addMessageToInterface('assistant', 'Started new conversation. How can I help you?');
+    
+    // Update UI to show new conversation
+    updateConversationUI();
+    saveConversationState();
+}
+
+function updateConversationUI() {
+    // Add conversation indicator to the chat header
+    const chatHeader = document.querySelector('.chat-container h2');
+    if (chatHeader) {
+        const conversationInfo = document.createElement('span');
+        conversationInfo.id = 'conversationInfo';
+        conversationInfo.style.fontSize = '0.8rem';
+        conversationInfo.style.color = 'var(--text-secondary)';
+        conversationInfo.style.marginLeft = '10px';
+        
+        if (conversationState === 'new') {
+            conversationInfo.textContent = '(New Conversation)';
+        } else if (conversationState === 'active') {
+            conversationInfo.textContent = '(Continuing Conversation)';
+        }
+        
+        // Remove existing conversation info
+        const existing = document.getElementById('conversationInfo');
+        if (existing) existing.remove();
+        
+        chatHeader.appendChild(conversationInfo);
+    }
+}
+
+function addNewConversationButton() {
+    const chatContainer = document.querySelector('.chat-container');
+    const chatHeader = chatContainer.querySelector('h2') || chatContainer.firstElementChild;
+    
+    if (!document.getElementById('newConversationBtn')) {
+        const newConvButton = document.createElement('button');
+        newConvButton.id = 'newConversationBtn';
+        newConvButton.textContent = 'New Conversation';
+        newConvButton.style.cssText = `
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 15px;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        `;
+        newConvButton.onmouseover = () => newConvButton.style.background = 'var(--accent-light-blue)';
+        newConvButton.onmouseout = () => newConvButton.style.background = 'var(--accent-blue)';
+        newConvButton.onclick = startNewConversation;
+        
+        chatHeader.style.display = 'flex';
+        chatHeader.style.justifyContent = 'space-between';
+        chatHeader.style.alignItems = 'center';
+        chatHeader.appendChild(newConvButton);
+    }
+}
+
+function saveConversationState() {
+    const state = {
+        conversationId: currentConversationId,
+        timestamp: new Date().toISOString()
+    };
+    try {
+        sessionStorage.setItem('conversationState', JSON.stringify(state));
+    } catch (error) {
+        console.log('Could not save conversation state');
+    }
+}
+
+function restoreConversationState() {
+    try {
+        const saved = sessionStorage.getItem('conversationState');
+        if (saved) {
+            const state = JSON.parse(saved);
+            currentConversationId = state.conversationId;
+            conversationState = 'active';
+            updateConversationUI();
+        }
+    } catch (error) {
+        console.log('No previous conversation state found');
+    }
 }
 
 // Model management functions
@@ -488,7 +589,8 @@ async function sendMessage() {
                 model: selectedModel,
                 message: messageText,
                 context_files: selectedFiles,
-                model_params: modelParams
+                model_params: modelParams,
+                conversation_id: currentConversationId
             })
         });
         
@@ -502,6 +604,11 @@ async function sendMessage() {
             // Add enhanced message with deliberation data
             addEnhancedMessageToInterface('assistant', responseData);
             await loadChatHistory();
+            
+            // Update conversation state
+            conversationState = 'active';
+            updateConversationUI();
+            saveConversationState();
         }
     } catch (error) {
         console.error('Chat error:', error);
@@ -606,6 +713,9 @@ function createDeliberationSection(responseData) {
     
     deliberationContent.innerHTML = `
         <div class="deliberation-item">
+            <strong>Conversation Context:</strong> ${summary.conversation_continuity || 'New conversation'}
+        </div>
+        <div class="deliberation-item">
             <strong>Strategy:</strong> ${summary.strategy || 'Standard response approach'}
         </div>
         <div class="deliberation-item">
@@ -709,7 +819,7 @@ function removeDeliberationIndicator() {
 // Enhanced chat history management
 async function loadChatHistory() {
     try {
-        const response = await fetch('/api/chat/history');
+        const response = await fetch(`/api/chat/history?conversation_id=${currentConversationId}`);
         const historyData = await response.json();
         
         const historyList = document.getElementById('historyList');

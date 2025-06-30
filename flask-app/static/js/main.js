@@ -1,7 +1,18 @@
 // Global state
 let selectedModel = 'llama2';
 let selectedFiles = [];
+let systemFiles = []; // Files that are always included
 let chatHistory = [];
+
+// Model parameters
+let modelParams = {
+    temperature: 0.7,
+    top_p: 0.9,
+    top_k: 40,
+    repeat_penalty: 1.1,
+    seed: -1,
+    num_predict: -1
+};
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFiles();
     loadChatHistory();
     checkStatus();
+    initializeModelParams();
     
     // Set up event listeners
     document.getElementById('modelSelect').addEventListener('change', (e) => {
@@ -23,9 +35,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Model parameter event listeners
+    setupModelParamListeners();
+    
     // Check status every 10 seconds
     setInterval(checkStatus, 10000);
 });
+
+// Initialize model parameters UI
+function initializeModelParams() {
+    document.getElementById('temperature').value = modelParams.temperature;
+    document.getElementById('top_p').value = modelParams.top_p;
+    document.getElementById('top_k').value = modelParams.top_k;
+    document.getElementById('repeat_penalty').value = modelParams.repeat_penalty;
+    document.getElementById('seed').value = modelParams.seed;
+    document.getElementById('num_predict').value = modelParams.num_predict;
+    
+    updateParamDisplays();
+}
+
+// Setup model parameter event listeners
+function setupModelParamListeners() {
+    const params = ['temperature', 'top_p', 'top_k', 'repeat_penalty', 'seed', 'num_predict'];
+    
+    params.forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+            element.addEventListener('input', (e) => {
+                const value = param === 'seed' || param === 'num_predict' || param === 'top_k' 
+                    ? parseInt(e.target.value) 
+                    : parseFloat(e.target.value);
+                modelParams[param] = value;
+                updateParamDisplays();
+            });
+        }
+    });
+    
+    // Reset to defaults button
+    document.getElementById('resetParams').addEventListener('click', resetModelParams);
+}
+
+// Update parameter display values
+function updateParamDisplays() {
+    document.getElementById('temperatureValue').textContent = modelParams.temperature.toFixed(2);
+    document.getElementById('topPValue').textContent = modelParams.top_p.toFixed(2);
+    document.getElementById('topKValue').textContent = modelParams.top_k;
+    document.getElementById('repeatPenaltyValue').textContent = modelParams.repeat_penalty.toFixed(2);
+    document.getElementById('seedValue').textContent = modelParams.seed === -1 ? 'Random' : modelParams.seed;
+    document.getElementById('numPredictValue').textContent = modelParams.num_predict === -1 ? 'Auto' : modelParams.num_predict;
+}
+
+// Reset model parameters to defaults
+function resetModelParams() {
+    modelParams = {
+        temperature: 0.7,
+        top_p: 0.9,
+        top_k: 40,
+        repeat_penalty: 1.1,
+        seed: -1,
+        num_predict: -1
+    };
+    initializeModelParams();
+}
 
 // Load available models
 async function loadModels() {
@@ -69,6 +140,21 @@ async function loadFiles() {
             return;
         }
         
+        // Identify system files (files that should always be included)
+        systemFiles = files.filter(file => 
+            file.toLowerCase().includes('admin') || 
+            file.toLowerCase().includes('system') ||
+            file.toLowerCase().includes('default') ||
+            file.toLowerCase().includes('config')
+        );
+        
+        // Add system files to selected files if not already present
+        systemFiles.forEach(file => {
+            if (!selectedFiles.includes(file)) {
+                selectedFiles.push(file);
+            }
+        });
+        
         files.forEach(file => {
             const item = document.createElement('div');
             item.className = 'file-item';
@@ -76,24 +162,40 @@ async function loadFiles() {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.value = file;
-            checkbox.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    selectedFiles.push(file);
-                } else {
-                    selectedFiles = selectedFiles.filter(f => f !== file);
-                }
-            });
+            
+            // System files are always checked and disabled
+            const isSystemFile = systemFiles.includes(file);
+            if (isSystemFile) {
+                checkbox.checked = true;
+                checkbox.disabled = true;
+                item.classList.add('system-file');
+            } else {
+                checkbox.checked = selectedFiles.includes(file);
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        selectedFiles.push(file);
+                    } else {
+                        selectedFiles = selectedFiles.filter(f => f !== file);
+                    }
+                });
+            }
             
             const label = document.createElement('label');
             label.textContent = file;
+            if (isSystemFile) {
+                label.innerHTML += ' <span class="system-badge">SYSTEM</span>';
+            }
             
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Delete';
+            deleteBtn.disabled = isSystemFile; // Prevent deletion of system files
             deleteBtn.onclick = () => deleteFile(file);
             
             item.appendChild(checkbox);
             item.appendChild(label);
-            item.appendChild(deleteBtn);
+            if (!isSystemFile) { // Only show delete button for non-system files
+                item.appendChild(deleteBtn);
+            }
             fileList.appendChild(item);
         });
     } catch (error) {
@@ -129,6 +231,11 @@ async function handleFileUpload(event) {
 
 // Delete file
 async function deleteFile(filename) {
+    if (systemFiles.includes(filename)) {
+        alert('Cannot delete system files');
+        return;
+    }
+    
     if (!confirm(`Delete ${filename}?`)) return;
     
     try {
@@ -174,7 +281,8 @@ async function sendMessage() {
             body: JSON.stringify({
                 model: selectedModel,
                 message: message,
-                context_files: selectedFiles
+                context_files: selectedFiles,
+                model_params: modelParams
             })
         });
         

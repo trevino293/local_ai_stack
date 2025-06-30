@@ -33,6 +33,7 @@ mkdir -p shared-data/context-files
 
 3. Start the stack:
 ```bash
+docker-compose build --no-cache flask-app
 docker-compose up -d
 ```
 

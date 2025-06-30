@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\flask-app"
+    "\\flask-app",
+    "\\flask-app\\static",
+    "\\flask-app\\static\\js"
   ],
+  "SelectedNode": "\\flask-app\\static\\js\\main.js",
   "PreviewInSolutionExplorer": true
 }

@@ -17,8 +17,39 @@ SYSTEM_FILES = [
     'admin', 'system', 'default', 'config', 'haag', 'response-instructions'
 ]
 
-# In-memory chat history (in production, use a database)
+# In-memory storage (in production, use a database)
 chat_history = []
+saved_model_params = {}
+saved_configurations = []
+config_id_counter = 1
+
+# Default parameter presets
+DEFAULT_PRESETS = {
+    "creative": {
+        "temperature": 1.2,
+        "top_p": 0.95,
+        "top_k": 50,
+        "repeat_penalty": 1.0,
+        "seed": -1,
+        "num_predict": -1
+    },
+    "balanced": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 40,
+        "repeat_penalty": 1.1,
+        "seed": -1,
+        "num_predict": -1
+    },
+    "precise": {
+        "temperature": 0.2,
+        "top_p": 0.7,
+        "top_k": 20,
+        "repeat_penalty": 1.2,
+        "seed": -1,
+        "num_predict": -1
+    }
+}
 
 @app.route('/')
 def index():
@@ -31,6 +62,70 @@ def get_models():
         return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/model-params', methods=['GET'])
+def get_model_params():
+    """Get saved model parameters for the current session"""
+    model = request.args.get('model', 'default')
+    
+    if model in saved_model_params:
+        return jsonify({
+            "status": "success",
+            "params": saved_model_params[model],
+            "timestamp": saved_model_params[model].get('saved_at')
+        })
+    else:
+        # Return default balanced preset
+        return jsonify({
+            "status": "default",
+            "params": DEFAULT_PRESETS["balanced"],
+            "timestamp": None
+        })
+
+@app.route('/api/model-params', methods=['POST'])
+def save_model_params():
+    """Save model parameters for a specific model"""
+    data = request.json
+    model = data.get('model', 'default')
+    params = data.get('params', {})
+    
+    # Validate parameters
+    required_params = ['temperature', 'top_p', 'top_k', 'repeat_penalty', 'seed', 'num_predict']
+    if not all(param in params for param in required_params):
+        return jsonify({"error": "Missing required parameters"}), 400
+    
+    # Save parameters with timestamp
+    saved_model_params[model] = {
+        **params,
+        'saved_at': datetime.now().isoformat(),
+        'model': model
+    }
+    
+    return jsonify({
+        "status": "success",
+        "message": f"Parameters saved for model {model}",
+        "timestamp": saved_model_params[model]['saved_at']
+    })
+
+@app.route('/api/presets', methods=['GET'])
+def get_presets():
+    """Get available parameter presets"""
+    return jsonify({
+        "presets": DEFAULT_PRESETS,
+        "default": "balanced"
+    })
+
+@app.route('/api/presets/<preset_name>', methods=['GET'])
+def get_preset(preset_name):
+    """Get specific preset parameters"""
+    if preset_name in DEFAULT_PRESETS:
+        return jsonify({
+            "status": "success",
+            "preset": preset_name,
+            "params": DEFAULT_PRESETS[preset_name]
+        })
+    else:
+        return jsonify({"error": "Preset not found"}), 404
 
 def is_system_file(filename):
     """Check if a file should be treated as a system file"""
@@ -171,7 +266,8 @@ Instructions:
             "user_selected_files": context_files,
             "system_files": system_files,
             "model_params": model_params,
-            "context_file_count": context_file_count
+            "context_file_count": context_file_count,
+            "ollama_options": options
         }
         chat_history.append(chat_entry)
         
@@ -184,7 +280,26 @@ Instructions:
 
 @app.route('/api/chat/history', methods=['GET'])
 def get_chat_history():
-    return jsonify(chat_history)
+    """Get chat history with optional filtering"""
+    model_filter = request.args.get('model')
+    limit = request.args.get('limit', type=int)
+    
+    filtered_history = chat_history
+    
+    if model_filter:
+        filtered_history = [h for h in chat_history if h.get('model') == model_filter]
+    
+    if limit:
+        filtered_history = filtered_history[-limit:]
+    
+    return jsonify(filtered_history)
+
+@app.route('/api/chat/history', methods=['DELETE'])
+def clear_chat_history():
+    """Clear chat history"""
+    global chat_history
+    chat_history = []
+    return jsonify({"message": "Chat history cleared successfully"})
 
 @app.route('/api/files', methods=['GET'])
 def list_files():
@@ -267,10 +382,125 @@ def system_info():
             "total_files": len(all_files),
             "system_files": system_files,
             "user_files": user_files,
-            "system_file_keywords": SYSTEM_FILES
+            "system_file_keywords": SYSTEM_FILES,
+            "saved_param_configs": len(saved_model_params),
+            "available_presets": list(DEFAULT_PRESETS.keys())
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/saved-configs', methods=['GET'])
+def get_saved_configurations():
+    """Retrieve all saved parameter configurations"""
+    try:
+        # Sort configurations by creation time (most recent first)
+        sorted_configs = sorted(saved_configurations, 
+                               key=lambda x: x.get('created_at', ''), 
+                               reverse=True)
+        
+        return jsonify({
+            "status": "success",
+            "configurations": sorted_configs,
+            "total_count": len(sorted_configs)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/saved-configs', methods=['POST'])
+def create_saved_configuration():
+    """Create a new named parameter configuration"""
+    global config_id_counter
+    
+    data = request.json
+    name = data.get('name', '').strip()
+    params = data.get('params', {})
+    model = data.get('model', 'default')
+    
+    # Validate input parameters
+    if not name:
+        return jsonify({"error": "Configuration name is required"}), 400
+    
+    if len(name) > 50:
+        return jsonify({"error": "Configuration name must be 50 characters or less"}), 400
+    
+    # Check for duplicate names
+    if any(config['name'].lower() == name.lower() for config in saved_configurations):
+        return jsonify({"error": "A configuration with this name already exists"}), 400
+    
+    # Validate required parameters
+    required_params = ['temperature', 'top_p', 'top_k', 'repeat_penalty', 'seed', 'num_predict']
+    if not all(param in params for param in required_params):
+        return jsonify({"error": "Missing required parameters"}), 400
+    
+    # Create new configuration entry
+    new_config = {
+        "id": config_id_counter,
+        "name": name,
+        "params": params,
+        "model": model,
+        "created_at": datetime.now().isoformat(),
+        "last_used": None,
+        "usage_count": 0
+    }
+    
+    saved_configurations.append(new_config)
+    config_id_counter += 1
+    
+    return jsonify({
+        "status": "success",
+        "message": f"Configuration '{name}' saved successfully",
+        "configuration": new_config
+    })
+
+@app.route('/api/saved-configs/<int:config_id>', methods=['DELETE'])
+def delete_saved_configuration(config_id):
+    """Delete a specific saved configuration"""
+    global saved_configurations
+    
+    # Find configuration by ID
+    config_to_delete = None
+    config_index = None
+    
+    for index, config in enumerate(saved_configurations):
+        if config['id'] == config_id:
+            config_to_delete = config
+            config_index = index
+            break
+    
+    if not config_to_delete:
+        return jsonify({"error": "Configuration not found"}), 404
+    
+    # Remove configuration from storage
+    saved_configurations.pop(config_index)
+    
+    return jsonify({
+        "status": "success",
+        "message": f"Configuration '{config_to_delete['name']}' deleted successfully"
+    })
+
+@app.route('/api/saved-configs/<int:config_id>/apply', methods=['POST'])
+def apply_saved_configuration(config_id):
+    """Apply a saved configuration and update usage statistics"""
+    # Find configuration by ID
+    config_to_apply = None
+    
+    for config in saved_configurations:
+        if config['id'] == config_id:
+            config_to_apply = config
+            break
+    
+    if not config_to_apply:
+        return jsonify({"error": "Configuration not found"}), 404
+    
+    # Update usage statistics
+    config_to_apply['last_used'] = datetime.now().isoformat()
+    config_to_apply['usage_count'] = config_to_apply.get('usage_count', 0) + 1
+    
+    return jsonify({
+        "status": "success",
+        "message": f"Configuration '{config_to_apply['name']}' applied successfully",
+        "configuration": config_to_apply
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

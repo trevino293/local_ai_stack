@@ -17,62 +17,102 @@
 			<div class="main-grid">
 				<!-- Left Panel: Model & File Management -->
 				<div class="panel">
-					<h2>Model Selection</h2>
-					<select id="modelSelect" class="model-select">
-						<option value="">Loading models...</option>
-					</select>
+					<h2>Model & Configuration</h2>
+					<div class="model-header">
+						<select id="modelSelect" class="model-select">
+							<option value="">Loading models...</option>
+						</select>
+						<div class="config-button">
+							<button class="gear-btn" id="configToggle">
+								<svg class="gear-icon" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+								</svg>
+							</button>
+							<div class="config-dropdown" id="configDropdown">
+								<div class="config-header">
+									<span class="config-title">Model Parameters</span>
+								</div>
 
-					<h2>Model Parameters</h2>
-					<div class="model-params">
-						<div class="param-group">
-							<label for="temperature">
-								Temperature: <span id="temperatureValue">0.70</span>
-							</label>
-							<input type="range" id="temperature" min="0" max="2" step="0.01" value="0.7">
-								<small>Controls randomness (0=deterministic, 2=very creative)</small>
+								<div class="preset-controls">
+									<button class="preset-btn" data-preset="creative">Creative</button>
+									<button class="preset-btn" data-preset="balanced">Balanced</button>
+									<button class="preset-btn" data-preset="precise">Precise</button>
+								</div>
+
+								<div class="saved-configs">
+									<div class="saved-configs-header">
+										<span class="saved-configs-title">Saved Configurations</span>
+										<button class="config-new-btn" id="newConfigBtn">+ New</button>
+									</div>
+									<div class="saved-configs-list" id="savedConfigsList">
+										<p class="no-configs">No saved configurations</p>
+									</div>
+								</div>
+
+								<div class="config-save-section" id="configSaveSection" style="display: none;">
+									<div class="config-save-input">
+										<input type="text" id="configNameInput" placeholder="Configuration name..." maxlength="50">
+											<div class="config-save-actions">
+												<button class="config-save-btn" id="saveNewConfigBtn">Save</button>
+												<button class="config-cancel-btn" id="cancelSaveBtn">Cancel</button>
+											</div>
+										</div>
+								</div>
+
+								<div class="param-group">
+									<label for="temperature">
+										Temperature: <span class="param-value" id="temperatureValue">0.70</span>
+									</label>
+									<input type="range" id="temperature" min="0" max="2" step="0.01" value="0.7">
+										<small>Controls randomness (0=deterministic, 2=very creative)</small>
+									</div>
+
+								<div class="param-group">
+									<label for="top_p">
+										Top P: <span class="param-value" id="topPValue">0.90</span>
+									</label>
+									<input type="range" id="top_p" min="0" max="1" step="0.01" value="0.9">
+										<small>Nucleus sampling threshold</small>
+									</div>
+
+								<div class="param-group">
+									<label for="top_k">
+										Top K: <span class="param-value" id="topKValue">40</span>
+									</label>
+									<input type="range" id="top_k" min="1" max="100" step="1" value="40">
+										<small>Limits vocabulary to top K tokens</small>
+									</div>
+
+								<div class="param-group">
+									<label for="repeat_penalty">
+										Repeat Penalty: <span class="param-value" id="repeatPenaltyValue">1.10</span>
+									</label>
+									<input type="range" id="repeat_penalty" min="0.5" max="2" step="0.01" value="1.1">
+										<small>Penalizes repetition (1=no penalty)</small>
+									</div>
+
+								<div class="param-group">
+									<label for="seed">
+										Seed: <span class="param-value" id="seedValue">Random</span>
+									</label>
+									<input type="number" id="seed" min="-1" max="999999" value="-1">
+										<small>-1 for random, set for reproducible output</small>
+									</div>
+
+								<div class="param-group">
+									<label for="num_predict">
+										Max Tokens: <span class="param-value" id="numPredictValue">Auto</span>
+									</label>
+									<input type="number" id="num_predict" min="-1" max="4096" value="-1">
+										<small>-1 for auto, limit response length</small>
+									</div>
+
+								<div class="config-actions">
+									<button class="save-btn" id="saveParams">Save</button>
+									<button class="reset-btn" id="resetParams">Reset</button>
+								</div>
 							</div>
-
-						<div class="param-group">
-							<label for="top_p">
-								Top P: <span id="topPValue">0.90</span>
-							</label>
-							<input type="range" id="top_p" min="0" max="1" step="0.01" value="0.9">
-								<small>Nucleus sampling threshold</small>
-							</div>
-
-						<div class="param-group">
-							<label for="top_k">
-								Top K: <span id="topKValue">40</span>
-							</label>
-							<input type="range" id="top_k" min="1" max="100" step="1" value="40">
-								<small>Limits vocabulary to top K tokens</small>
-							</div>
-
-						<div class="param-group">
-							<label for="repeat_penalty">
-								Repeat Penalty: <span id="repeatPenaltyValue">1.10</span>
-							</label>
-							<input type="range" id="repeat_penalty" min="0.5" max="2" step="0.01" value="1.1">
-								<small>Penalizes repetition (1=no penalty)</small>
-							</div>
-
-						<div class="param-group">
-							<label for="seed">
-								Seed: <span id="seedValue">Random</span>
-							</label>
-							<input type="number" id="seed" min="-1" max="999999" value="-1">
-								<small>-1 for random, set for reproducible output</small>
-							</div>
-
-						<div class="param-group">
-							<label for="num_predict">
-								Max Tokens: <span id="numPredictValue">Auto</span>
-							</label>
-							<input type="number" id="num_predict" min="-1" max="4096" value="-1">
-								<small>-1 for auto, limit response length</small>
-							</div>
-
-						<button id="resetParams" class="reset-btn">Reset to Defaults</button>
+						</div>
 					</div>
 
 					<h2>System Status</h2>
@@ -109,9 +149,7 @@
 								<span>Assistant</span>
 								<span>Ready</span>
 							</div>
-							<div class="message-content">
-								Hello! I'm your local AI assistant. Select a model from the left panel and start chatting. You can also upload context files to enhance our conversation. System files are automatically included and provide important context for our discussions.
-							</div>
+							<div class="message-content">Hello! I'm your local AI assistant. Select a model and configure parameters using the gear icon, then start chatting. Upload context files to enhance our conversations.</div>
 						</div>
 					</div>
 					<div class="chat-input">

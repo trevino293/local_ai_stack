@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+﻿from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import requests
 import os
@@ -55,187 +55,216 @@ DEFAULT_PRESETS = {
 # Enhanced RAG Pipeline with Deliberation and Conversation Context
 # Replace the entire EnhancedRAGPipeline class in your flask-app/app.py
 
-class EnhancedRAGPipeline:
+class VectorizedRAGPipeline:
     def __init__(self, ollama_host, mcp_server_url):
         self.ollama_host = ollama_host
         self.mcp_server_url = mcp_server_url
         
-    def deliberate_and_respond(self, model, user_message, context_files, model_params, conversation_history=None):
-        """Two-stage RAG: deliberation then concrete response with conversation context"""
+    def process_query(self, model, user_message, model_params, conversation_history=None, fast_mode=True):
+        """Streamlined RAG with semantic search"""
         
-        # Stage 1: Deliberation - analyze context and plan response
-        deliberation_result = self._deliberation_stage(model, user_message, context_files, model_params, conversation_history)
-        
-        # Stage 2: Concrete Response - generate final answer
-        final_response = self._response_stage(model, user_message, context_files, deliberation_result, model_params, conversation_history)
-        
-        return {
-            'deliberation': deliberation_result,
-            'response': final_response['content'],
-            'metadata': {
-                'context_files_used': final_response['context_files_used'],
-                'reasoning_trace': deliberation_result.get('reasoning_trace', ''),
-                'confidence_score': deliberation_result.get('confidence_score', 7),
-                'source_citations': final_response['citations']
-            }
-        }
+        if fast_mode:
+            return self._fast_response(model, user_message, model_params, conversation_history)
+        else:
+            return self._detailed_response(model, user_message, model_params, conversation_history)
     
-    def _format_conversation_history(self, chat_history, max_messages=5):
-        """Format recent chat history for context"""
-        if not chat_history:
-            return ""
+    def _fast_response(self, model, user_message, model_params, conversation_history=None):
+        """Fast mode: single pass with semantic search"""
         
-        # Get recent messages (excluding current)
-        recent_messages = chat_history[-max_messages:]
+        # Get relevant context via semantic search
+        relevant_chunks = self._semantic_search(user_message, top_k=3)
+        context_content = self._format_search_results(relevant_chunks)
         
-        formatted_history = "\n--- CONVERSATION HISTORY ---\n"
-        for entry in recent_messages:
-            formatted_history += f"USER: {entry['message']}\n"
-            formatted_history += f"ASSISTANT: {entry['response']}\n\n"
-        
-        formatted_history += "--- END CONVERSATION HISTORY ---\n\n"
-        return formatted_history
-    
-    def _deliberation_stage(self, model, user_message, context_files, model_params, conversation_history=None):
-        """Stage 1: Analyze context and plan response approach with conversation awareness"""
-        
-        context_content = self._load_context_files(context_files)
-        
-        # Format conversation history for deliberation
+        # Format conversation history
         conversation_context = ""
         if conversation_history:
-            conversation_context = self._format_conversation_history(conversation_history)
+            conversation_context = self._format_conversation_history(conversation_history[-3:])
         
-        deliberation_prompt = f"""
-You are in DELIBERATION MODE. Analyze the user's question and available context to plan your response.
+        # Single optimized prompt
+        prompt = f"""Answer the user's question using the provided context and conversation history.
 
 {conversation_context}
 
 USER QUESTION: {user_message}
-
-AVAILABLE CONTEXT:
-{context_content}
-
-DELIBERATION TASKS:
-1. CONVERSATION CONTINUITY: How does this question relate to previous messages?
-2. RELEVANCE ANALYSIS: Which context files are most relevant? Why?
-3. INFORMATION GAPS: What information is missing to fully answer the question?
-4. RESPONSE STRATEGY: What approach will best address the user's needs?
-5. CONFIDENCE ASSESSMENT: How confident can you be in your answer (1-10)?
-6. CITATION PLAN: Which specific sections should be cited?
-
-Provide a structured analysis in JSON format:
-{{
-    "conversation_continuity": "how this relates to previous messages",
-    "relevant_files": ["file1.txt", "file2.md"],
-    "key_insights": ["insight1", "insight2"],
-    "information_gaps": ["gap1", "gap2"],
-    "response_strategy": "detailed explanation of approach",
-    "confidence_score": 8,
-    "reasoning_trace": "step-by-step thought process",
-    "citation_targets": [
-        {{"file": "file1.txt", "section": "relevant section", "reason": "supports main claim"}}
-    ]
-}}
-"""
-
-        # Use lower temperature for deliberation (more analytical)
-        deliberation_params = model_params.copy()
-        deliberation_params['temperature'] = max(0.3, model_params.get('temperature', 0.7) - 0.4)
-        
-        deliberation_response = self._call_ollama(model, deliberation_prompt, deliberation_params)
-        
-        try:
-            return json.loads(deliberation_response)
-        except:
-            # Fallback if JSON parsing fails
-            return {
-                "conversation_continuity": "Continuing conversation",
-                "relevant_files": context_files,
-                "key_insights": ["Analysis pending"],
-                "information_gaps": [],
-                "response_strategy": "Direct response approach",
-                "confidence_score": 7,
-                "reasoning_trace": deliberation_response,
-                "citation_targets": []
-            }
-    
-    def _response_stage(self, model, user_message, context_files, deliberation, model_params, conversation_history=None):
-        """Stage 2: Generate concrete, well-structured response with conversation context"""
-        
-        # Load only the most relevant context files identified in deliberation
-        relevant_files = deliberation.get('relevant_files', context_files)
-        focused_context = self._load_context_files(relevant_files)
-        
-        # Format conversation history if available
-        conversation_context = ""
-        if conversation_history:
-            conversation_context = self._format_conversation_history(conversation_history)
-        
-        # Safely extract insights and gaps as strings
-        key_insights = deliberation.get('key_insights', [])
-        information_gaps = deliberation.get('information_gaps', [])
-        
-        # Convert to string format safely
-        insights_str = ', '.join([str(insight) for insight in key_insights]) if key_insights else 'No specific insights identified'
-        gaps_str = ', '.join([str(gap) for gap in information_gaps]) if information_gaps else 'No significant gaps identified'
-        
-        response_prompt = f"""
-You are now in RESPONSE MODE. Provide a clear, concrete answer to the user's question.
-
-{conversation_context}
-
-USER QUESTION: {user_message}
-
-DELIBERATION INSIGHTS:
-- Response Strategy: {deliberation.get('response_strategy', 'Standard approach')}
-- Key Insights: {insights_str}
-- Information Gaps: {gaps_str}
 
 RELEVANT CONTEXT:
-{focused_context}
+{context_content}
 
-RESPONSE REQUIREMENTS:
-1. Consider the conversation history when formulating your response
-2. Reference previous topics if relevant to the current question
-3. Start with a direct answer to the user's question
-4. Provide supporting details from the context
-5. Cite specific sources using [File: filename] format
-6. Address any information gaps noted in deliberation
-7. Be concrete and actionable where possible
-8. End with next steps or recommendations if appropriate
+INSTRUCTIONS:
+1. Provide a clear, direct answer
+2. Cite sources using [Source: filename] format
+3. If context is insufficient, say so clearly
+4. Maintain conversation continuity
 
-Generate a well-structured response that directly addresses the user's needs while maintaining conversation continuity.
-"""
+Generate a helpful response:"""
 
-        final_response = self._call_ollama(model, response_prompt, model_params)
-        
-        # Extract citations and metadata
-        citations = self._extract_citations(final_response, relevant_files)
+        response = self._call_ollama(model, prompt, model_params)
+        citations = self._extract_citations_from_search(response, relevant_chunks)
         
         return {
-            'content': final_response,
-            'context_files_used': relevant_files,
-            'citations': citations
+            'response': response,
+            'citations': citations,
+            'context_chunks_used': len(relevant_chunks),
+            'search_results': relevant_chunks,
+            'processing_mode': 'fast',
+            'confidence_score': self._estimate_confidence(relevant_chunks, user_message)
         }
     
-    def _load_context_files(self, context_files):
-        """Load and format context from files"""
-        context_content = ""
+    def _detailed_response(self, model, user_message, model_params, conversation_history=None):
+        """Detailed mode: analysis + response"""
         
-        for filename in context_files:
-            try:
-                response = requests.get(f"{self.mcp_server_url}/files/{filename}")
-                if response.ok:
-                    file_type = "SYSTEM" if self._is_system_file(filename) else "USER"
-                    context_content += f"\n--- [{file_type} FILE: {filename}] ---\n{response.text}\n"
-            except Exception as e:
-                logging.error(f"Error loading file {filename}: {e}")
+        # Step 1: Analyze query and search
+        analysis = self._analyze_query(model, user_message, model_params)
+        relevant_chunks = self._semantic_search(user_message, top_k=5)
+        
+        # Step 2: Generate response with analysis
+        context_content = self._format_search_results(relevant_chunks)
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = self._format_conversation_history(conversation_history[-5:])
+        
+        prompt = f"""Provide a comprehensive response based on your analysis and available context.
+
+QUERY ANALYSIS: {analysis}
+
+{conversation_context}
+
+USER QUESTION: {user_message}
+
+RELEVANT CONTEXT:
+{context_content}
+
+RESPONSE REQUIREMENTS:
+1. Address the query comprehensively
+2. Reference specific context chunks using [Source: filename]
+3. Explain your reasoning process
+4. Assess confidence in your answer (1-10)
+5. Note any limitations or gaps
+
+Generate detailed response:"""
+
+        response = self._call_ollama(model, prompt, model_params)
+        citations = self._extract_citations_from_search(response, relevant_chunks)
+        
+        return {
+            'response': response,
+            'citations': citations,
+            'analysis': analysis,
+            'context_chunks_used': len(relevant_chunks),
+            'search_results': relevant_chunks,
+            'processing_mode': 'detailed',
+            'confidence_score': self._extract_confidence_from_response(response)
+        }
+    
+    def _semantic_search(self, query, top_k=3):
+        """Search for relevant chunks using vector similarity"""
+        try:
+            response = requests.post(f"{self.mcp_server_url}/search", 
+                json={
+                    'query': query,
+                    'topK': top_k,
+                    'minSimilarity': 0.3
+                },
+                timeout=10
+            )
+            
+            if response.ok:
+                return response.json().get('results', [])
+            else:
+                logging.error(f"Search failed: {response.status_code}")
+                return []
                 
-        return context_content
+        except Exception as e:
+            logging.error(f"Semantic search error: {e}")
+            return []
+    
+    def _format_search_results(self, search_results):
+        """Format search results into context"""
+        if not search_results:
+            return "No relevant context found."
+        
+        context = ""
+        for i, result in enumerate(search_results, 1):
+            similarity = result.get('similarity', 0)
+            filename = result.get('filename', 'unknown')
+            chunk = result.get('chunk', '')
+            
+            context += f"\n--- [CHUNK {i} from {filename}] (relevance: {similarity:.2f}) ---\n"
+            context += chunk + "\n"
+        
+        return context
+    
+    def _analyze_query(self, model, user_message, model_params):
+        """Quick analysis of user query"""
+        analysis_prompt = f"""Analyze this query briefly:
+
+QUERY: {user_message}
+
+Provide a 2-3 sentence analysis covering:
+- Query type (factual, analytical, creative, etc.)
+- Key concepts to search for
+- Expected answer complexity
+
+Analysis:"""
+        
+        # Use lower temperature for analysis
+        analysis_params = model_params.copy()
+        analysis_params['temperature'] = 0.3
+        
+        return self._call_ollama(model, analysis_prompt, analysis_params)
+    
+    def _estimate_confidence(self, search_results, query):
+        """Estimate confidence based on search quality"""
+        if not search_results:
+            return 3
+        
+        avg_similarity = sum(r.get('similarity', 0) for r in search_results) / len(search_results)
+        
+        if avg_similarity > 0.7:
+            return 8
+        elif avg_similarity > 0.5:
+            return 6
+        elif avg_similarity > 0.3:
+            return 5
+        else:
+            return 4
+    
+    def _extract_confidence_from_response(self, response):
+        """Extract confidence score from detailed response"""
+        import re
+        confidence_match = re.search(r'confidence[:\s]+(\d+)', response.lower())
+        if confidence_match:
+            return int(confidence_match.group(1))
+        return 7
+    
+    def _extract_citations_from_search(self, response, search_results):
+        """Extract citations based on search results"""
+        citations = []
+        filenames = set(result.get('filename', '') for result in search_results)
+        
+        for filename in filenames:
+            if filename and (f"[Source: {filename}]" in response or filename in response):
+                citations.append({
+                    'file': filename,
+                    'type': 'SYSTEM' if self._is_system_file(filename) else 'USER'
+                })
+        
+        return citations
+    
+    def _format_conversation_history(self, history):
+        """Format conversation history efficiently"""
+        if not history:
+            return ""
+        
+        formatted = "\n--- RECENT CONVERSATION ---\n"
+        for entry in history:
+            formatted += f"USER: {entry['message']}\n"
+            formatted += f"ASSISTANT: {entry['response'][:200]}...\n\n"
+        
+        return formatted + "--- END CONVERSATION ---\n"
     
     def _call_ollama(self, model, prompt, model_params):
-        """Make API call to Ollama"""
+        """Make optimized API call to Ollama"""
         options = self._prepare_model_options(model_params)
         
         payload = {
@@ -246,7 +275,8 @@ Generate a well-structured response that directly addresses the user's needs whi
         }
         
         try:
-            response = requests.post(f"{self.ollama_host}/api/generate", json=payload)
+            response = requests.post(f"{self.ollama_host}/api/generate", 
+                                   json=payload, timeout=60)
             result = response.json()
             return result.get('response', '')
         except Exception as e:
@@ -272,23 +302,12 @@ Generate a well-structured response that directly addresses the user's needs whi
             
         return options
     
-    def _extract_citations(self, response_text, context_files):
-        """Extract citation information from response"""
-        citations = []
-        for filename in context_files:
-            if f"[File: {filename}]" in response_text or filename in response_text:
-                citations.append({
-                    'file': filename,
-                    'type': 'SYSTEM' if self._is_system_file(filename) else 'USER'
-                })
-        return citations
-    
     def _is_system_file(self, filename):
         """Check if file is a system file"""
-        return any(keyword in filename.lower() for keyword in SYSTEM_FILES)
-    
+        system_keywords = ['admin', 'system', 'default', 'config']
+        return any(keyword in filename.lower() for keyword in system_keywords) 
 # Initialize enhanced RAG pipeline
-rag_pipeline = EnhancedRAGPipeline(OLLAMA_HOST, MCP_SERVER_URL)
+rag_pipeline = VectorizedRAGPipeline(OLLAMA_HOST, MCP_SERVER_URL)
 
 @app.route('/')
 def index():
@@ -387,80 +406,65 @@ def get_all_context_files():
         return []
 
 @app.route('/api/chat', methods=['POST'])
-def enhanced_chat():
-    """Enhanced chat endpoint with deliberation RAG pipeline and conversation context"""
+def vectorized_chat():
+    """Optimized chat endpoint with vector search"""
     data = request.json
     model = data.get('model', 'llama2')
     message = data.get('message', '')
-    context_files = data.get('context_files', [])
     model_params = data.get('model_params', {})
-    
-    # Get conversation ID or session identifier
     conversation_id = data.get('conversation_id', 'default')
-    
-    # Get all available files
-    all_files = get_all_context_files()
-    
-    # Always include system files
-    system_files = [f for f in all_files if is_system_file(f)]
-    
-    # Combine user-selected files with system files, removing duplicates
-    all_context_files = list(set(context_files + system_files))
+    fast_mode = data.get('fast_mode', True)  # Default to fast mode
     
     try:
-        # Get recent conversation history for this session
-        # Filter by conversation_id if you implement multiple conversations
+        # Get conversation history
         conversation_messages = [
             entry for entry in chat_history 
             if entry.get('conversation_id', 'default') == conversation_id
         ]
-        conversation_history = conversation_messages[-10:]  # Last 10 messages for context
+        conversation_history = conversation_messages[-5:]  # Last 5 for context
         
-        # Use enhanced RAG pipeline with conversation context
-        result = rag_pipeline.deliberate_and_respond(
+        # Use vectorized RAG pipeline
+        result = rag_pipeline.process_query(
             model, 
             message, 
-            all_context_files, 
             model_params,
-            conversation_history=conversation_history
+            conversation_history=conversation_history,
+            fast_mode=fast_mode
         )
         
-        # Store enhanced chat history
+        # Store chat history
         chat_entry = {
             "timestamp": datetime.now().isoformat(),
             "conversation_id": conversation_id,
             "model": model,
             "message": message,
             "response": result['response'],
-            "deliberation": result['deliberation'],
-            "metadata": result['metadata'],
-            "context_files": all_context_files,
-            "user_selected_files": context_files,
-            "system_files": system_files,
-            "model_params": model_params,
-            "context_file_count": len(all_context_files)
+            "citations": result['citations'],
+            "context_chunks_used": result['context_chunks_used'],
+            "processing_mode": result['processing_mode'],
+            "confidence_score": result['confidence_score'],
+            "model_params": model_params
         }
         
         chat_history.append(chat_entry)
         
         return jsonify({
             'response': result['response'],
-            'deliberation_summary': {
-                'confidence': result['deliberation'].get('confidence_score', 7),
-                'strategy': result['deliberation'].get('response_strategy', 'Standard approach'),
-                'files_used': result['metadata']['context_files_used'],
-                'conversation_continuity': result['deliberation'].get('conversation_continuity', 'New conversation')
+            'citations': result['citations'],
+            'metadata': {
+                'processing_mode': result['processing_mode'],
+                'context_chunks_used': result['context_chunks_used'],
+                'confidence_score': result['confidence_score'],
+                'search_results': result.get('search_results', [])
             },
-            'citations': result['metadata']['source_citations'],
-            'reasoning_available': True,
             'conversation_id': conversation_id,
             **chat_entry
         })
         
     except Exception as e:
-        logging.error(f"Enhanced chat error: {e}")
-        return jsonify({"error": f"Enhanced RAG error: {str(e)}"}), 500
-
+        logging.error(f"Vectorized chat error: {e}")
+        return jsonify({"error": f"Chat processing error: {str(e)}"}), 500
+    
 @app.route('/api/chat/history', methods=['GET'])
 def get_chat_history():
     """Get chat history with optional filtering"""

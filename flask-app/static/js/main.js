@@ -643,24 +643,29 @@ function addMessageToInterface(role, content) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// Enhanced message interface with multi-step reasoning
 function addEnhancedMessageToInterface(role, responseData) {
     const chatMessages = document.getElementById('chatMessages');
     
     const messageElement = document.createElement('div');
     messageElement.className = `message ${role} enhanced-message`;
     
-    // Message header with confidence indicator
+    // Enhanced message header with detailed confidence
     const messageHeader = document.createElement('div');
     messageHeader.className = 'message-header';
     
-    const confidence = responseData.deliberation_summary?.confidence || 7;
+    const confidence = getNestedValue(responseData, 'deliberation_summary.confidence') || 7;
+    const reasoningQuality = getNestedValue(responseData, 'metadata.reasoning_quality') || 'adequate';
     const confidenceColor = confidence >= 8 ? '#10b981' : confidence >= 6 ? '#f59e0b' : '#ef4444';
     
     messageHeader.innerHTML = `
         <span>${role === 'user' ? 'You' : 'Assistant'}</span>
         <div class="message-metadata">
             <span class="confidence-indicator" style="color: ${confidenceColor}">
-                Confidence: ${confidence}/10
+                Confidence: ${confidence}/10 (${reasoningQuality})
+            </span>
+            <span class="reasoning-pattern" style="color: var(--system-accent); font-size: 0.8rem;">
+                ${getNestedValue(responseData, 'metadata.reasoning_pattern') || 'Standard'}
             </span>
             <span class="timestamp">${new Date().toLocaleTimeString()}</span>
         </div>
@@ -669,10 +674,10 @@ function addEnhancedMessageToInterface(role, responseData) {
     // Main response content
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
-    messageContent.textContent = responseData.response;
+    messageContent.textContent = responseData.response || 'Response generated';
     
-    // Deliberation summary (collapsible)
-    const deliberationSection = createDeliberationSection(responseData);
+    // Enhanced deliberation section with reasoning chain
+    const deliberationSection = createEnhancedDeliberationSection(responseData);
     
     // Citations section
     const citationsSection = createCitationsSection(responseData.citations || []);
@@ -686,9 +691,23 @@ function addEnhancedMessageToInterface(role, responseData) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function createDeliberationSection(responseData) {
+// Safe property access helper
+function getNestedValue(obj, path, defaultValue = null) {
+    if (!obj || !path) return defaultValue;
+    
+    try {
+        return path.split('.').reduce((current, key) => {
+            return current && current[key] !== undefined ? current[key] : defaultValue;
+        }, obj);
+    } catch (error) {
+        return defaultValue;
+    }
+}
+
+// New enhanced deliberation section with error handling
+function createEnhancedDeliberationSection(responseData) {
     const deliberationSection = document.createElement('div');
-    deliberationSection.className = 'deliberation-section';
+    deliberationSection.className = 'deliberation-section enhanced';
     
     const deliberationHeader = document.createElement('div');
     deliberationHeader.className = 'deliberation-header';
@@ -697,7 +716,7 @@ function createDeliberationSection(responseData) {
             <svg class="deliberation-icon" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Reasoning Process
+            Multi-Step Reasoning Process
         </span>
         <button class="deliberation-toggle" onclick="toggleDeliberation(this)">
             <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -709,31 +728,192 @@ function createDeliberationSection(responseData) {
     const deliberationContent = document.createElement('div');
     deliberationContent.className = 'deliberation-content collapsed';
     
-    const summary = responseData.deliberation_summary || {};
+    const reasoningChain = getNestedValue(responseData, 'metadata.reasoning_chain') || [];
+    const confidenceBreakdown = getNestedValue(responseData, 'metadata.confidence_breakdown') || {};
+    const validationFlags = getNestedValue(responseData, 'metadata.validation_flags') || [];
     
     deliberationContent.innerHTML = `
-        <div class="deliberation-item">
-            <strong>Conversation Context:</strong> ${summary.conversation_continuity || 'New conversation'}
-        </div>
-        <div class="deliberation-item">
-            <strong>Strategy:</strong> ${summary.strategy || 'Standard response approach'}
-        </div>
-        <div class="deliberation-item">
-            <strong>Files Analyzed:</strong> ${(summary.files_used || []).join(', ') || 'None'}
-        </div>
-        <div class="deliberation-item">
-            <strong>Confidence Level:</strong> 
-            <div class="confidence-bar">
-                <div class="confidence-fill" style="width: ${(summary.confidence || 7) * 10}%"></div>
+        <div class="reasoning-overview">
+            <div class="deliberation-item">
+                <strong>Reasoning Pattern:</strong> ${getNestedValue(responseData, 'metadata.reasoning_pattern') || 'Standard'}
             </div>
-            <span class="confidence-text">${summary.confidence || 7}/10</span>
+            <div class="deliberation-item">
+                <strong>Problem Components:</strong> ${formatComponents(reasoningChain[0])}
+            </div>
+            <div class="deliberation-item">
+                <strong>Evidence Quality:</strong> ${formatEvidenceQuality(reasoningChain[1])}
+            </div>
         </div>
+        
+        <div class="reasoning-chain">
+            <h4 style="color: var(--accent-light-blue); margin: 15px 0 10px 0;">Reasoning Chain</h4>
+            ${createReasoningSteps(reasoningChain)}
+        </div>
+        
+        <div class="confidence-breakdown">
+            <h4 style="color: var(--accent-light-blue); margin: 15px 0 10px 0;">Confidence Analysis</h4>
+            ${createConfidenceBreakdown(confidenceBreakdown)}
+        </div>
+        
+        ${validationFlags.length > 0 ? `
+        <div class="validation-flags">
+            <h4 style="color: var(--warning); margin: 15px 0 10px 0;">Validation Notes</h4>
+            ${validationFlags.map(flag => `<div class="flag-item">⚠️ ${flag}</div>`).join('')}
+        </div>
+        ` : ''}
     `;
     
     deliberationSection.appendChild(deliberationHeader);
     deliberationSection.appendChild(deliberationContent);
     
     return deliberationSection;
+}
+
+// Fixed helper functions for formatting reasoning data
+function formatComponents(decomposition) {
+    if (!decomposition) return 'Single component analysis';
+    
+    // Handle different data types
+    if (typeof decomposition === 'string') return decomposition;
+    if (Array.isArray(decomposition)) return decomposition.join(', ');
+    if (decomposition.components) {
+        return decomposition.components.map(comp => {
+            return typeof comp === 'object' ? (comp.aspect || comp.description || JSON.stringify(comp)) : comp;
+        }).join(', ');
+    }
+    
+    return 'Processing completed';
+}
+
+function formatEvidenceQuality(evidence) {
+    if (!evidence) return 'Moderate';
+    
+    // Handle different data types
+    if (typeof evidence === 'string') return evidence;
+    if (evidence.overall_evidence_quality) {
+        return evidence.overall_evidence_quality.charAt(0).toUpperCase() + evidence.overall_evidence_quality.slice(1);
+    }
+    
+    return 'Moderate';
+}
+
+function createReasoningSteps(reasoningChain) {
+    if (!Array.isArray(reasoningChain) || reasoningChain.length === 0) {
+        return '<div class="reasoning-step"><div class="step-content">No detailed reasoning chain available</div></div>';
+    }
+    
+    const stepNames = [
+        'Problem Decomposition',
+        'Evidence Gathering', 
+        'Pattern Identification',
+        'Hypothesis Formation',
+        'Verification',
+        'Synthesis'
+    ];
+    
+    return reasoningChain.map((step, index) => `
+        <div class="reasoning-step">
+            <div class="step-header">
+                <span class="step-number">${index + 1}</span>
+                <span class="step-name">${stepNames[index] || `Step ${index + 1}`}</span>
+            </div>
+            <div class="step-content">
+                ${formatStepContent(step, index)}
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatStepContent(step, stepIndex) {
+    if (!step) return 'Processing completed';
+    
+    // Handle string responses from LLM
+    if (typeof step === 'string') {
+        return `<div>Status: <span class="highlight">Completed</span></div><div>Details: ${step.substring(0, 100)}</div>`;
+    }
+    
+    // Handle non-object responses
+    if (typeof step !== 'object') {
+        return `<div>Result: <span class="highlight">${step}</span></div>`;
+    }
+    
+    try {
+        switch(stepIndex) {
+            case 0: // Decomposition
+                return `
+                    <div>Query Type: <span class="highlight">${step.query_type || 'analytical'}</span></div>
+                    <div>Complexity: <span class="highlight">${step.complexity || 'moderate'}</span></div>
+                    ${step.components ? `<div>Components: ${Array.isArray(step.components) ? step.components.length : 'N/A'}</div>` : ''}
+                `;
+            case 1: // Evidence
+                return `
+                    <div>Sources Analyzed: <span class="highlight">${step.ranked_sources?.length || 0}</span></div>
+                    <div>Evidence Quality: <span class="highlight">${step.overall_evidence_quality || 'moderate'}</span></div>
+                    ${step.coverage_assessment ? `<div>Coverage: ${formatCoverage(step.coverage_assessment)}</div>` : ''}
+                `;
+            case 2: // Pattern
+                return `
+                    <div>Pattern: <span class="highlight">${step.pattern_type || 'analytical'}</span></div>
+                    <div>Steps: <span class="highlight">${step.reasoning_steps?.length || 0}</span></div>
+                `;
+            case 3: // Hypothesis
+                return `
+                    <div>Approaches: <span class="highlight">${step.candidate_approaches?.length || 1}</span></div>
+                    ${step.primary_approach ? `<div>Strategy: ${typeof step.primary_approach === 'object' ? step.primary_approach.strategy || 'Standard' : step.primary_approach}</div>` : ''}
+                `;
+            case 4: // Verification
+                return `
+                    <div>Logic Score: <span class="highlight">${step.logical_consistency?.score || step.overall_confidence || 'N/A'}</span></div>
+                    <div>Completeness: <span class="highlight">${step.completeness_assessment?.information_sufficiency || 'N/A'}</span></div>
+                `;
+            case 5: // Synthesis
+                return `
+                    <div>Strategy: <span class="highlight">${step.strategy || 'comprehensive'}</span></div>
+                    <div>Citations: <span class="highlight">${step.citation_targets?.length || 0}</span></div>
+                `;
+            default:
+                // Fallback for any step format
+                if (typeof step === 'object') {
+                    const keys = Object.keys(step).slice(0, 3);
+                    return keys.map(key => `<div>${key}: <span class="highlight">${step[key]}</span></div>`).join('');
+                }
+                return `<div>Result: <span class="highlight">${JSON.stringify(step).substring(0, 100)}...</span></div>`;
+        }
+    } catch (error) {
+        console.error('Error formatting step content:', error);
+        return `<div>Processing: <span class="highlight">Step ${stepIndex + 1} completed</span></div>`;
+    }
+}
+
+function formatCoverage(coverage) {
+    if (!coverage || typeof coverage !== 'object') return 'Analysis completed';
+    
+    const well = coverage.well_covered?.length || 0;
+    const partial = coverage.partially_covered?.length || 0;
+    const gaps = coverage.gaps?.length || 0;
+    return `${well} complete, ${partial} partial, ${gaps} gaps`;
+}
+
+function createConfidenceBreakdown(breakdown) {
+    if (!breakdown || Object.keys(breakdown).length === 0) {
+        return '<div class="confidence-item">No detailed breakdown available</div>';
+    }
+    
+    return Object.entries(breakdown).map(([factor, score]) => `
+        <div class="confidence-item">
+            <div class="confidence-factor">
+                <span class="factor-name">${formatFactorName(factor)}</span>
+                <div class="confidence-bar-small">
+                    <div class="confidence-fill-small" style="width: ${score * 10}%"></div>
+                </div>
+                <span class="factor-score">${score}/10</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatFactorName(factor) {
+    return factor.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
 function createCitationsSection(citations) {
@@ -778,22 +958,39 @@ function toggleDeliberation(button) {
     icon.style.transform = content.classList.contains('collapsed') ? '' : 'rotate(180deg)';
 }
 
+// Enhanced deliberation indicator with more stages
 function displayDeliberationIndicator() {
     const chatMessages = document.getElementById('chatMessages');
     
     const deliberationElement = document.createElement('div');
-    deliberationElement.className = 'deliberation-indicator';
+    deliberationElement.className = 'deliberation-indicator enhanced';
     deliberationElement.id = 'deliberation-indicator';
     
     deliberationElement.innerHTML = `
         <div class="deliberation-stages">
             <div class="stage active">
-                <div class="stage-icon">🤔</div>
-                <div class="stage-text">Analyzing context...</div>
+                <div class="stage-icon">🔍</div>
+                <div class="stage-text">Decomposing problem...</div>
+            </div>
+            <div class="stage">
+                <div class="stage-icon">📊</div>
+                <div class="stage-text">Gathering evidence...</div>
+            </div>
+            <div class="stage">
+                <div class="stage-icon">🧠</div>
+                <div class="stage-text">Identifying patterns...</div>
+            </div>
+            <div class="stage">
+                <div class="stage-icon">💡</div>
+                <div class="stage-text">Forming hypotheses...</div>
+            </div>
+            <div class="stage">
+                <div class="stage-icon">✅</div>
+                <div class="stage-text">Verifying reasoning...</div>
             </div>
             <div class="stage">
                 <div class="stage-icon">📝</div>
-                <div class="stage-text">Generating response...</div>
+                <div class="stage-text">Synthesizing response...</div>
             </div>
         </div>
     `;
@@ -802,11 +999,17 @@ function displayDeliberationIndicator() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     // Simulate stage progression
-    setTimeout(() => {
-        const stages = deliberationElement.querySelectorAll('.stage');
-        stages[0].classList.remove('active');
-        stages[1].classList.add('active');
-    }, 2000);
+    let currentStage = 0;
+    const stages = deliberationElement.querySelectorAll('.stage');
+    const stageInterval = setInterval(() => {
+        if (currentStage < stages.length - 1) {
+            stages[currentStage].classList.remove('active');
+            currentStage++;
+            stages[currentStage].classList.add('active');
+        } else {
+            clearInterval(stageInterval);
+        }
+    }, 1500);
 }
 
 function removeDeliberationIndicator() {
@@ -836,9 +1039,10 @@ async function loadChatHistory() {
     }
 }
 
+// Enhanced history item creation
 function createHistoryListItem(historyItem, index) {
     const historyElement = document.createElement('div');
-    historyElement.className = 'history-item';
+    historyElement.className = 'history-item enhanced';
     historyElement.onclick = () => displayHistoryItem(index);
     
     const timestampElement = document.createElement('div');
@@ -849,21 +1053,31 @@ function createHistoryListItem(historyItem, index) {
     previewElement.className = 'history-preview';
     previewElement.textContent = historyItem.message.substring(0, 50) + '...';
     
-    // Add confidence indicator to history
-    if (historyItem.deliberation_summary?.confidence) {
-        const confidenceElement = document.createElement('div');
-        confidenceElement.className = 'history-confidence';
-        const confidence = historyItem.deliberation_summary.confidence;
+    // Enhanced confidence and reasoning indicators
+    const metadataElement = document.createElement('div');
+    metadataElement.className = 'history-metadata';
+    
+    const confidence = getNestedValue(historyItem, 'deliberation_summary.confidence');
+    if (confidence) {
+        const reasoningPattern = getNestedValue(historyItem, 'metadata.reasoning_pattern') || 'standard';
         const confidenceColor = confidence >= 8 ? '#10b981' : confidence >= 6 ? '#f59e0b' : '#ef4444';
-        confidenceElement.innerHTML = `
-            <span class="confidence-dot" style="background: ${confidenceColor}"></span>
-            <span class="confidence-value">${confidence}/10</span>
+        
+        metadataElement.innerHTML = `
+            <div class="history-confidence">
+                <span class="confidence-dot" style="background: ${confidenceColor}"></span>
+                <span class="confidence-value">${confidence}/10</span>
+            </div>
+            <div class="history-pattern" style="font-size: 0.7rem; color: var(--system-accent);">
+                ${reasoningPattern}
+            </div>
         `;
-        historyElement.appendChild(confidenceElement);
     }
     
     historyElement.appendChild(timestampElement);
     historyElement.appendChild(previewElement);
+    if (metadataElement.innerHTML) {
+        historyElement.appendChild(metadataElement);
+    }
     
     return historyElement;
 }

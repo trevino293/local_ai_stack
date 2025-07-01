@@ -1,4 +1,4 @@
-﻿# Local AI Stack
+﻿# Local AI Stack (OL-MCP)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
 [![GitHub issues](https://img.shields.io/github/issues/trevino293/local_ai_stack)](https://github.com/trevino293/local_ai_stack/issues)

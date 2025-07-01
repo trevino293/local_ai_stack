@@ -670,6 +670,7 @@ h1 {
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .confidence-indicator {
@@ -685,13 +686,25 @@ h1 {
     font-size: 1.2rem;
 }
 
-/* Deliberation Section */
+.reasoning-pattern {
+    background: rgba(139, 92, 246, 0.2);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* Enhanced Deliberation Styles */
 .deliberation-section {
     margin-top: 15px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background: var(--bg-tertiary);
     overflow: hidden;
+}
+
+.deliberation-section.enhanced {
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 1px solid var(--system-accent);
 }
 
 .deliberation-header {
@@ -766,6 +779,145 @@ h1 {
     color: var(--accent-light-blue);
     display: block;
     margin-bottom: 4px;
+}
+
+/* Reasoning Overview */
+.reasoning-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+/* Reasoning Chain */
+.reasoning-chain {
+    margin: 15px 0;
+}
+
+.reasoning-step {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.reasoning-step:hover {
+    border-color: var(--accent-blue);
+    transform: translateX(2px);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(37, 99, 235, 0.1) 100%);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.step-number {
+    background: var(--accent-blue);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.step-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.step-content {
+    padding: 12px 15px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.step-content .highlight {
+    color: var(--accent-light-blue);
+    font-weight: 600;
+}
+
+.step-content > div {
+    margin-bottom: 6px;
+}
+
+/* Confidence Breakdown */
+.confidence-breakdown {
+    margin: 15px 0;
+}
+
+.confidence-item {
+    margin-bottom: 8px;
+}
+
+.confidence-factor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.factor-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.confidence-bar-small {
+    width: 60px;
+    height: 6px;
+    background: var(--bg-primary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.confidence-fill-small {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.factor-score {
+    font-weight: 600;
+    color: var(--accent-light-blue);
+    font-size: 0.8rem;
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Validation Flags */
+.validation-flags {
+    margin: 15px 0;
+}
+
+.flag-item {
+    padding: 8px 12px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--warning);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    color: var(--warning);
+    font-size: 0.85rem;
 }
 
 /* Confidence Bar */
@@ -868,10 +1020,21 @@ h1 {
     border: 1px solid var(--border-color);
 }
 
+.deliberation-indicator.enhanced {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border: 1px solid var(--system-accent);
+}
+
 .deliberation-stages {
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+.deliberation-indicator.enhanced .deliberation-stages {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
 }
 
 .stage {
@@ -886,11 +1049,24 @@ h1 {
     transition: all 0.5s ease;
 }
 
+.deliberation-indicator.enhanced .stage {
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    flex-direction: column;
+}
+
 .stage.active {
     opacity: 1;
     background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-light-blue) 100%);
     color: white;
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.deliberation-indicator.enhanced .stage.active {
+    background: linear-gradient(135deg, var(--system-accent) 0%, rgba(139, 92, 246, 0.8) 100%);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    animation: pulse 2s infinite;
 }
 
 .stage-icon {
@@ -899,9 +1075,19 @@ h1 {
     text-align: center;
 }
 
+.deliberation-indicator.enhanced .stage-icon {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
 .stage-text {
     font-weight: 500;
     font-size: 0.9rem;
+}
+
+.deliberation-indicator.enhanced .stage-text {
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 .stage.active .stage-text {
@@ -922,6 +1108,10 @@ h1 {
     cursor: pointer;
     transition: background 0.3s;
     border: 1px solid var(--border-color);
+}
+
+.history-item.enhanced {
+    position: relative;
 }
 
 .history-item:hover {
@@ -950,6 +1140,13 @@ h1 {
     font-size: 0.75rem;
 }
 
+.history-metadata {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
 .confidence-dot {
     width: 8px;
     height: 8px;
@@ -959,6 +1156,14 @@ h1 {
 .confidence-value {
     color: var(--text-secondary);
     font-weight: 500;
+}
+
+.history-pattern {
+    background: rgba(139, 92, 246, 0.2);
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: var(--system-accent);
 }
 
 /* Loading Spinner */
@@ -972,12 +1177,12 @@ h1 {
     margin: 20px auto;
 }
 
+/* Animations */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Animation for deliberation expansion */
 @keyframes expandDeliberation {
     from {
         max-height: 0;
@@ -986,6 +1191,18 @@ h1 {
     to {
         max-height: 500px;
         opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+    }
+    100% {
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
     }
 }
 
@@ -1085,5 +1302,28 @@ h1 {
         flex-direction: column;
         gap: 5px;
         align-items: flex-start;
+    }
+    
+    .reasoning-overview {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .deliberation-indicator.enhanced .deliberation-stages {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .step-header {
+        padding: 10px 12px;
+    }
+    
+    .step-content {
+        padding: 10px 12px;
+    }
+    
+    .confidence-factor {
+        padding: 6px 10px;
+        gap: 8px;
     }
 }

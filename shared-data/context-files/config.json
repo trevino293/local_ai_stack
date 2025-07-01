@@ -4,6 +4,7 @@
     "version": "1.0",
     "last_updated": "2025-06-30"
   },
+
   "communication_standards": {
     "tone": {
       "required": "Professional, authoritative, consultative",
@@ -21,6 +22,7 @@
       "detailed_reports": "800+ words for governance frameworks and implementation plans"
     }
   },
+
   "content_requirements": {
     "evidence_citation": {
       "mandatory": "Always reference specific context documents when making recommendations",
@@ -39,6 +41,7 @@
       "severity_levels": ["Critical", "High", "Medium", "Low"]
     }
   },
+
   "quality_standards": {
     "accuracy_requirements": {
       "technical_specifications": "Verify all technical details against current GCP documentation",
@@ -51,6 +54,7 @@
       "success_metrics": "Define measurable outcomes and KPIs for governance initiatives"
     }
   },
+
   "response_templates": {
     "governance_assessment": {
       "opening": "Based on analysis of [context documents], the current governance state presents [key findings].",
@@ -68,6 +72,7 @@
       "closing": "Compliance certification requires [specific actions] within [timeframe]."
     }
   },
+
   "prohibited_content": {
     "avoid_statements": [
       ""I think" or "I believe" - Use evidence-based assertions",
@@ -81,6 +86,7 @@
       "Regulatory advice that constitutes legal counsel"
     ]
   },
+
   "escalation_triggers": {
     "high_risk_scenarios":[
       "Recommendations involving data classification changes",
@@ -93,6 +99,7 @@
       "Enterprise-scale data migration strategies"
     ]
   },
+
   "continuous_improvement": {
     "feedback_integration": "Incorporate lessons learned from implementation outcomes",
     "documentation_updates": "Maintain current knowledge of GCP service updates and regulatory changes",

@@ -17,6 +17,21 @@ services:
    #           count: all
    #           capabilities: [gpu]
 
+  embedding-service:
+    build: ./embedding-service
+    container_name: embedding-service
+    ports:
+      - "8080:8080"
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   mcp-filesystem:
     build: ./mcp-server
     container_name: mcp-filesystem-server
@@ -26,8 +41,17 @@ services:
       - ./shared-data/context-files:/workspace
     environment:
       - NODE_ENV=production
-      - EMBEDDING_SERVICE=http://localhost:8080
+      - EMBEDDING_SERVICE=http://embedding-service:8080
+    depends_on:
+      embedding-service:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   flask-app:
     build: ./flask-app
@@ -40,6 +64,7 @@ services:
       - FLASK_ENV=production
       - OLLAMA_HOST=http://ollama:11434
       - MCP_SERVER_URL=http://mcp-filesystem:3000
+      - EMBEDDING_SERVICE_URL=http://embedding-service:8080
     depends_on:
       - ollama
       - mcp-filesystem

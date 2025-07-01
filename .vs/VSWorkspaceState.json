@@ -1,14 +1,16 @@
 {
   "ExpandedNodes": [
     "",
+    "\\embedding-service",
     "\\flask-app",
     "\\flask-app\\static",
-    "\\flask-app\\static\\css",
+    "\\flask-app\\static\\images",
     "\\flask-app\\static\\js",
     "\\flask-app\\templates",
+    "\\mcp-server",
     "\\shared-data",
     "\\shared-data\\context-files"
   ],
-  "SelectedNode": "\\shared-data\\context-files\\config.json",
+  "SelectedNode": "\\mcp-server\\server.js",
   "PreviewInSolutionExplorer": true
 }

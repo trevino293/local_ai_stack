@@ -26,6 +26,7 @@ services:
       - ./shared-data/context-files:/workspace
     environment:
       - NODE_ENV=production
+      - EMBEDDING_SERVICE=http://localhost:8080
     restart: unless-stopped
 
   flask-app:

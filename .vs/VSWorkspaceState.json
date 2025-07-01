@@ -3,8 +3,12 @@
     "",
     "\\flask-app",
     "\\flask-app\\static",
-    "\\flask-app\\static\\js"
+    "\\flask-app\\static\\css",
+    "\\flask-app\\static\\js",
+    "\\flask-app\\templates",
+    "\\shared-data",
+    "\\shared-data\\context-files"
   ],
-  "SelectedNode": "\\flask-app\\static\\js\\main.js",
+  "SelectedNode": "\\shared-data\\context-files\\config.json",
   "PreviewInSolutionExplorer": true
 }

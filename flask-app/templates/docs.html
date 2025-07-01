@@ -1,0 +1,833 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Local AI Stack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .docs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .docs-nav {
+            position: sticky;
+            top: 20px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .docs-nav h3 {
+            color: var(--accent-light-blue);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .docs-nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .docs-nav li {
+            margin-bottom: 8px;
+        }
+        
+        .docs-nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            display: block;
+            transition: all 0.3s;
+        }
+        
+        .docs-nav a:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .docs-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+        }
+        
+        .docs-main {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .docs-section {
+            margin-bottom: 40px;
+        }
+        
+        .docs-section h2 {
+            color: var(--accent-light-blue);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 1.8rem;
+        }
+        
+        .docs-section h3 {
+            color: var(--accent-light-blue);
+            margin: 25px 0 15px 0;
+            font-size: 1.3rem;
+        }
+        
+        .docs-section h4 {
+            color: var(--text-primary);
+            margin: 20px 0 10px 0;
+            font-size: 1.1rem;
+        }
+        
+        .docs-section p {
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        
+        .docs-section ul, .docs-section ol {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-left: 25px;
+        }
+        
+        .docs-section li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .feature-card h4 {
+            color: var(--accent-light-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .architecture-diagram {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-light-blue) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .tech-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .tech-item h5 {
+            color: var(--accent-light-blue);
+            margin-bottom: 8px;
+        }
+        
+        .tech-item p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-blue);
+            text-decoration: none;
+            margin-bottom: 20px;
+            padding: 8px 0;
+            transition: color 0.3s;
+        }
+        
+        .back-link:hover {
+            color: var(--accent-light-blue);
+        }
+        
+        @media (max-width: 1024px) {
+            .docs-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .docs-nav {
+                position: static;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content" style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Local AI Stack Documentation</h1>
+                <div class="header-links" style="display: flex; align-items: center; gap: 15px;">
+                    <a href="/" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        color: var(--text-primary);
+                        text-decoration: none;
+                        padding: 8px 12px;
+                        border-radius: 5px;
+                        border: 1px solid var(--border-color);
+                        background: var(--bg-tertiary);
+                        transition: all 0.3s;
+                        font-size: 0.9rem;
+                    " onmouseover="this.style.background='var(--accent-blue)'; this.style.borderColor='var(--accent-blue)';" onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-color)';">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                        </svg>
+                        Back to App
+                    </a>
+                    <a href="https://github.com/trevino293/local_ai_stack" target="_blank" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        color: var(--text-primary);
+                        text-decoration: none;
+                        padding: 8px 12px;
+                        border-radius: 5px;
+                        border: 1px solid var(--border-color);
+                        background: var(--bg-tertiary);
+                        transition: all 0.3s;
+                        font-size: 0.9rem;
+                    " onmouseover="this.style.background='var(--accent-blue)'; this.style.borderColor='var(--accent-blue)';" onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-color)';">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="docs-container">
+        <div class="docs-content">
+            <!-- Navigation Sidebar -->
+            <div class="docs-nav">
+                <h3>📖 Table of Contents</h3>
+                <ul>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#features">Key Features</a></li>
+                    <li><a href="#technical">Technical Deep Dive</a></li>
+                    <li><a href="#architecture">System Architecture</a></li>
+                    <li><a href="#rag-pipeline">Enhanced RAG Pipeline</a></li>
+                    <li><a href="#deliberation">Deliberation System</a></li>
+                    <li><a href="#components">Core Components</a></li>
+                    <li><a href="#data-flow">Data Flow</a></li>
+                    <li><a href="#configuration">Configuration System</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                </ul>
+            </div>
+
+            <!-- Main Documentation Content -->
+            <div class="docs-main">
+                <!-- About Section -->
+                <div class="docs-section" id="about">
+                    <h2>🏠 About Local AI Stack</h2>
+                    
+                    <p>Local AI Stack is a self-hosted AI chat interface that brings enterprise-grade conversational AI capabilities to your local environment. Built with privacy, performance, and extensibility in mind, it provides a sophisticated alternative to cloud-based AI services.</p>
+
+                    <div class="highlight">
+                        <h4>🎯 Mission Statement</h4>
+                        <p>Democratize access to advanced AI capabilities while maintaining complete data privacy and control through local deployment.</p>
+                    </div>
+
+                    <h3>Why Local AI Stack?</h3>
+                    
+                    <ul>
+                        <li><strong>Complete Privacy:</strong> All data processing happens locally - no external API calls or data transmission</li>
+                        <li><strong>Enhanced Reasoning:</strong> Two-stage deliberation system provides transparent AI thinking processes</li>
+                        <li><strong>Context Awareness:</strong> Advanced RAG pipeline with citation tracking and confidence scoring</li>
+                        <li><strong>Enterprise Ready:</strong> Professional interface with conversation management and parameter persistence</li>
+                        <li><strong>Model Flexibility:</strong> Support for multiple Ollama models with dynamic switching</li>
+                        <li><strong>Easy Deployment:</strong> Docker Compose setup with automatic service orchestration</li>
+                    </ul>
+
+                    <h3>Use Cases</h3>
+                    
+                    <ul>
+                        <li><strong>Research & Development:</strong> Analyze documents and generate insights with full citation tracking</li>
+                        <li><strong>Education:</strong> Interactive learning with confidence indicators and reasoning transparency</li>
+                        <li><strong>Content Creation:</strong> Creative writing and brainstorming with adjustable creativity parameters</li>
+                        <li><strong>Code Development:</strong> Programming assistance with context-aware responses</li>
+                        <li><strong>Data Analysis:</strong> Process CSV files and generate reports with source validation</li>
+                        <li><strong>Personal Assistant:</strong> Daily task management with conversation continuity</li>
+                    </ul>
+                </div>
+
+                <!-- Key Features Section -->
+                <div class="docs-section" id="features">
+                    <h2>✨ Key Features</h2>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4>🧠 Enhanced RAG Pipeline</h4>
+                            <p>Two-stage processing with deliberation and response phases for higher quality outputs and transparent reasoning.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>📊 Confidence Scoring</h4>
+                            <p>AI-generated confidence levels (1-10) for every response with visual indicators and reasoning explanations.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>📚 Citation Tracking</h4>
+                            <p>Automatic source references with file-level tracking and system/user file distinction.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>💬 Conversation Context</h4>
+                            <p>Maintains conversation history across sessions with intelligent context integration.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>🔧 Advanced Configuration</h4>
+                            <p>Preset parameter configurations, custom saved settings, and real-time parameter adjustment.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>📁 File Management</h4>
+                            <p>Upload context files with automatic system file protection and selective inclusion.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>🎨 Modern Interface</h4>
+                            <p>Dark theme, responsive design, collapsible reasoning sections, and real-time status monitoring.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4>🚀 Easy Deployment</h4>
+                            <p>Docker Compose orchestration with GPU support and automatic service discovery.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Deep Dive -->
+                <div class="docs-section" id="technical">
+                    <h2>🔬 Technical Deep Dive</h2>
+
+                    <p>Local AI Stack implements a sophisticated multi-layered architecture that combines modern web technologies with advanced AI processing capabilities.</p>
+
+                    <div class="tech-stack">
+                        <div class="tech-item">
+                            <h5>Frontend</h5>
+                            <p>HTML5, CSS3, Vanilla JavaScript</p>
+                        </div>
+                        <div class="tech-item">
+                            <h5>Backend</h5>
+                            <p>Python Flask with CORS</p>
+                        </div>
+                        <div class="tech-item">
+                            <h5>AI Engine</h5>
+                            <p>Ollama with local LLMs</p>
+                        </div>
+                        <div class="tech-item">
+                            <h5>File System</h5>
+                            <p>Node.js MCP Server</p>
+                        </div>
+                        <div class="tech-item">
+                            <h5>Containerization</h5>
+                            <p>Docker & Docker Compose</p>
+                        </div>
+                        <div class="tech-item">
+                            <h5>Storage</h5>
+                            <p>Volume-mounted file system</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Architecture -->
+                <div class="docs-section" id="architecture">
+                    <h2>🏗️ System Architecture</h2>
+
+                    <div class="architecture-diagram">
+                        <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                        SYSTEM OVERVIEW                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐  │
+│  │   Flask Web UI  │────▶│  MCP Filesystem  │────▶│   Shared    │  │
+│  │   (Port 5000)   │     │   (Port 3000)    │     │  Storage    │  │
+│  │                 │     │                  │     │             │  │
+│  │ • Enhanced RAG  │     │ • File Upload    │     │ • System    │  │
+│  │ • Deliberation  │     │ • CRUD Ops       │     │   Files     │  │
+│  │ • Citations     │     │ • Status API     │     │ • User      │  │
+│  │ • Confidence    │     │ • Express.js     │     │   Files     │  │
+│  └────────┬────────┘     └──────────────────┘     │ • Config    │  │
+│           │                                       └─────────────┘  │
+│           ▼                                                        │
+│  ┌─────────────────┐                                              │
+│  │  Ollama Server  │                                              │
+│  │  (Port 11434)   │                                              │
+│  │                 │                                              │
+│  │ • Model Hosting │                                              │
+│  │ • GPU Support   │                                              │
+│  │ • API Gateway   │                                              │
+│  │ • LLM Inference │                                              │
+│  └─────────────────┘                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+                        </pre>
+                    </div>
+
+                    <h3>Component Responsibilities</h3>
+
+                    <h4>Flask Application (Python)</h4>
+                    <ul>
+                        <li>HTTP API endpoints for chat, configuration, and file management</li>
+                        <li>Enhanced RAG pipeline with two-stage processing</li>
+                        <li>Session management and conversation state</li>
+                        <li>Parameter persistence and preset management</li>
+                        <li>Real-time status monitoring</li>
+                    </ul>
+
+                    <h4>MCP Filesystem Server (Node.js)</h4>
+                    <ul>
+                        <li>File upload, download, and deletion operations</li>
+                        <li>Context file storage and retrieval</li>
+                        <li>System file protection mechanisms</li>
+                        <li>RESTful API for file operations</li>
+                    </ul>
+
+                    <h4>Ollama Server</h4>
+                    <ul>
+                        <li>Local LLM hosting and inference</li>
+                        <li>Model management and switching</li>
+                        <li>GPU acceleration support</li>
+                        <li>Parameter-based text generation</li>
+                    </ul>
+                </div>
+
+                <!-- Enhanced RAG Pipeline -->
+                <div class="docs-section" id="rag-pipeline">
+                    <h2>🔄 Enhanced RAG Pipeline</h2>
+
+                    <p>The core innovation of Local AI Stack is its two-stage RAG (Retrieval-Augmented Generation) pipeline that provides transparency and higher quality responses.</p>
+
+                    <div class="architecture-diagram">
+                        <pre>
+RAG PIPELINE FLOW:
+
+User Query ──┐
+             │
+Context Files┼─→ [STAGE 1: DELIBERATION] ──┐
+             │   • Analyze relevance        │
+Conversation │   • Plan strategy           │
+History   ───┘   • Assess confidence       │
+                 • Identify gaps            │
+                                           │
+                                           ▼
+┌─────────────────────────────────────────────────┐
+│              DELIBERATION OUTPUT                │
+│  {                                             │
+│    "conversation_continuity": "...",           │
+│    "relevant_files": [...],                    │
+│    "response_strategy": "...",                 │
+│    "confidence_score": 8,                      │
+│    "citation_targets": [...]                   │
+│  }                                             │
+└─────────────────────────────────────────────────┘
+                         │
+                         ▼
+              [STAGE 2: RESPONSE]
+              • Generate final answer
+              • Apply deliberation insights
+              • Include citations
+              • Maintain conversation context
+                         │
+                         ▼
+              Enhanced Response + Metadata
+                        </pre>
+                    </div>
+
+                    <h3>Stage 1: Deliberation</h3>
+                    <p>The deliberation stage uses a lower temperature setting to analytically assess:</p>
+                    <ul>
+                        <li><strong>Conversation Continuity:</strong> How the current query relates to previous messages</li>
+                        <li><strong>File Relevance:</strong> Which context files are most applicable</li>
+                        <li><strong>Information Gaps:</strong> What data might be missing for a complete answer</li>
+                        <li><strong>Response Strategy:</strong> Optimal approach for addressing the user's needs</li>
+                        <li><strong>Confidence Assessment:</strong> Numerical confidence score (1-10)</li>
+                        <li><strong>Citation Planning:</strong> Which sources should be referenced</li>
+                    </ul>
+
+                    <h3>Stage 2: Response Generation</h3>
+                    <p>The response stage uses the deliberation insights to generate:</p>
+                    <ul>
+                        <li><strong>Contextual Answers:</strong> Responses that consider conversation history</li>
+                        <li><strong>Source Citations:</strong> Automatic file references in [File: filename] format</li>
+                        <li><strong>Structured Output:</strong> Clear, actionable responses with next steps</li>
+                        <li><strong>Metadata Tracking:</strong> Files used, confidence scores, reasoning traces</li>
+                    </ul>
+                </div>
+
+                <!-- Deliberation System -->
+                <div class="docs-section" id="deliberation">
+                    <h2>🤔 Deliberation System</h2>
+
+                    <p>The deliberation system provides unprecedented transparency into AI reasoning processes, allowing users to understand how responses are formulated.</p>
+
+                    <h3>Confidence Scoring Algorithm</h3>
+                    <div class="code-block">
+def calculate_confidence(self, context_quality, information_completeness, query_complexity):
+    """
+    Confidence scoring based on multiple factors:
+    - Context quality and relevance (30%)
+    - Information completeness (40%) 
+    - Query complexity vs available data (30%)
+    """
+    base_score = 5.0
+    
+    # Adjust for context quality
+    context_factor = context_quality * 0.3
+    
+    # Adjust for information completeness  
+    completeness_factor = information_completeness * 0.4
+    
+    # Adjust for query complexity
+    complexity_factor = (1 - query_complexity) * 0.3
+    
+    final_score = min(10, max(1, base_score + context_factor + 
+                             completeness_factor + complexity_factor))
+    
+    return round(final_score, 1)
+                    </div>
+
+                    <h3>Conversation Context Integration</h3>
+                    <p>The system maintains conversation continuity by:</p>
+                    <ul>
+                        <li>Storing the last 10 messages for context</li>
+                        <li>Formatting conversation history for deliberation analysis</li>
+                        <li>Identifying topic continuity and relevance</li>
+                        <li>Adjusting response style based on conversation flow</li>
+                    </ul>
+
+                    <h3>Citation Extraction</h3>
+                    <p>Automatic citation tracking works by:</p>
+                    <ul>
+                        <li>Scanning response text for [File: filename] patterns</li>
+                        <li>Cross-referencing mentioned files with available context</li>
+                        <li>Categorizing citations as SYSTEM or USER files</li>
+                        <li>Providing metadata for source validation</li>
+                    </ul>
+                </div>
+
+                <!-- Core Components -->
+                <div class="docs-section" id="components">
+                    <h2>⚙️ Core Components</h2>
+
+                    <h3>Flask Application Structure</h3>
+                    <div class="code-block">
+flask-app/
+├── app.py                 # Main Flask application
+├── requirements.txt       # Python dependencies
+├── Dockerfile            # Container definition
+├── templates/
+│   └── index.html        # Main interface
+│   └── docs.html         # Documentation page
+└── static/
+    ├── css/
+    │   └── style.css     # Application styling
+    └── js/
+        └── main.js       # Frontend JavaScript
+                    </div>
+
+                    <h3>MCP Server Structure</h3>
+                    <div class="code-block">
+mcp-server/
+├── server.js             # Express.js file server
+├── package.json          # Node.js dependencies
+├── Dockerfile           # Container definition
+└── /workspace           # Mounted volume for files
+                    </div>
+
+                    <h3>Shared Data Organization</h3>
+                    <div class="code-block">
+shared-data/
+└── context-files/
+    ├── config.json       # System configuration
+    ├── admin-*.txt       # Administrative files
+    ├── system-*.md       # System documentation
+    └── user-uploads/     # User-uploaded files
+                    </div>
+                </div>
+
+                <!-- Data Flow -->
+                <div class="docs-section" id="data-flow">
+                    <h2>🔄 Data Flow</h2>
+
+                    <h3>Chat Request Flow</h3>
+                    <div class="architecture-diagram">
+                        <pre>
+1. User Input
+   ↓
+2. Frontend Validation
+   ↓
+3. API Request to Flask (/api/chat)
+   ↓
+4. Load Context Files (MCP Server)
+   ↓
+5. Format Conversation History
+   ↓
+6. Stage 1: Deliberation (Ollama)
+   ↓
+7. Parse Deliberation Results
+   ↓
+8. Stage 2: Response Generation (Ollama)
+   ↓
+9. Extract Citations & Metadata
+   ↓
+10. Store Chat History
+    ↓
+11. Return Enhanced Response
+    ↓
+12. Frontend Rendering with Collapsible Sections
+                        </pre>
+                    </div>
+
+                    <h3>File Management Flow</h3>
+                    <div class="architecture-diagram">
+                        <pre>
+File Upload:
+Browser → Flask (/api/files) → MCP Server (/files) → Disk Storage
+
+File Retrieval:
+Flask → MCP Server (/files/filename) → File Content → RAG Pipeline
+
+File Deletion:
+Browser → Flask (/api/files/filename) → MCP Server (DELETE) → Disk Removal
+                        </pre>
+                    </div>
+
+                    <h3>Configuration Management</h3>
+                    <div class="architecture-diagram">
+                        <pre>
+Parameter Persistence:
+UI Changes → In-Memory Storage → API Persistence (/api/model-params)
+
+Preset System:
+Built-in Presets → User Selection → Parameter Application → UI Update
+
+Saved Configurations:
+Custom Params → Named Storage → Retrieval System → Quick Application
+                        </pre>
+                    </div>
+                </div>
+
+                <!-- Configuration System -->
+                <div class="docs-section" id="configuration">
+                    <h2>⚙️ Configuration System</h2>
+
+                    <h3>Model Parameters</h3>
+                    <ul>
+                        <li><strong>Temperature (0-2):</strong> Controls randomness and creativity</li>
+                        <li><strong>Top P (0-1):</strong> Nucleus sampling threshold</li>
+                        <li><strong>Top K (1-100):</strong> Vocabulary limitation</li>
+                        <li><strong>Repeat Penalty (0.5-2):</strong> Repetition control</li>
+                        <li><strong>Seed (-1 or integer):</strong> Reproducibility control</li>
+                        <li><strong>Max Tokens (-1 or integer):</strong> Response length limit</li>
+                    </ul>
+
+                    <h3>Preset Configurations</h3>
+                    <div class="code-block">
+{
+  "creative": {
+    "temperature": 1.2,
+    "top_p": 0.95,
+    "top_k": 50,
+    "repeat_penalty": 1.0
+  },
+  "balanced": {
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 40,
+    "repeat_penalty": 1.1
+  },
+  "precise": {
+    "temperature": 0.2,
+    "top_p": 0.7,
+    "top_k": 20,
+    "repeat_penalty": 1.2
+  }
+}
+                    </div>
+
+                    <h3>Environment Variables</h3>
+                    <div class="code-block">
+# Docker Compose Configuration
+OLLAMA_HOST=http://ollama:11434
+MCP_SERVER_URL=http://mcp-filesystem:3000
+FLASK_ENV=production
+NODE_ENV=production
+
+# Optional GPU Support
+NVIDIA_VISIBLE_DEVICES=all
+                    </div>
+                </div>
+
+                <!-- API Reference -->
+                <div class="docs-section" id="api">
+                    <h2>📡 API Reference</h2>
+
+                    <h3>Chat Endpoints</h3>
+                    <div class="code-block">
+POST /api/chat
+{
+  "model": "llama3.2",
+  "message": "User question",
+  "context_files": ["file1.txt", "config.json"],
+  "model_params": {...},
+  "conversation_id": "unique_id"
+}
+
+Response:
+{
+  "response": "AI response text",
+  "deliberation_summary": {
+    "confidence": 8,
+    "strategy": "Analysis approach",
+    "files_used": ["relevant_files"],
+    "conversation_continuity": "Context description"
+  },
+  "citations": [
+    {"file": "source.txt", "type": "SYSTEM"}
+  ]
+}
+                    </div>
+
+                    <h3>File Management</h3>
+                    <div class="code-block">
+GET /api/files              # List all files
+POST /api/files             # Upload file (multipart/form-data)
+DELETE /api/files/filename  # Delete specific file
+                    </div>
+
+                    <h3>Configuration</h3>
+                    <div class="code-block">
+GET /api/model-params       # Get saved parameters
+POST /api/model-params      # Save parameters
+GET /api/saved-configs      # List saved configurations  
+POST /api/saved-configs     # Create new configuration
+DELETE /api/saved-configs/id # Delete configuration
+                    </div>
+
+                    <h3>System Status</h3>
+                    <div class="code-block">
+GET /api/models            # List available Ollama models
+GET /api/mcp/status        # MCP server health check
+GET /api/system/info       # System information
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.docs-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight current section in navigation
+        function updateNavigation() {
+            const sections = document.querySelectorAll('.docs-section');
+            const navLinks = document.querySelectorAll('.docs-nav a');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.style.background = '';
+                link.style.color = '';
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.style.background = 'var(--accent-blue)';
+                    link.style.color = 'white';
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateNavigation);
+        updateNavigation(); // Initial call
+    </script>
+</body>
+</html>

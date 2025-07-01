@@ -53,6 +53,8 @@ DEFAULT_PRESETS = {
 }
 
 # Enhanced RAG Pipeline with Deliberation and Conversation Context
+# Replace the entire EnhancedRAGPipeline class in your flask-app/app.py
+
 class EnhancedRAGPipeline:
     def __init__(self, ollama_host, mcp_server_url):
         self.ollama_host = ollama_host
@@ -170,6 +172,14 @@ Provide a structured analysis in JSON format:
         if conversation_history:
             conversation_context = self._format_conversation_history(conversation_history)
         
+        # Safely extract insights and gaps as strings
+        key_insights = deliberation.get('key_insights', [])
+        information_gaps = deliberation.get('information_gaps', [])
+        
+        # Convert to string format safely
+        insights_str = ', '.join([str(insight) for insight in key_insights]) if key_insights else 'No specific insights identified'
+        gaps_str = ', '.join([str(gap) for gap in information_gaps]) if information_gaps else 'No significant gaps identified'
+        
         response_prompt = f"""
 You are now in RESPONSE MODE. Provide a clear, concrete answer to the user's question.
 
@@ -178,9 +188,9 @@ You are now in RESPONSE MODE. Provide a clear, concrete answer to the user's que
 USER QUESTION: {user_message}
 
 DELIBERATION INSIGHTS:
-- Response Strategy: {deliberation.get('response_strategy', '')}
-- Key Insights: {', '.join(deliberation.get('key_insights', []))}
-- Information Gaps: {', '.join(deliberation.get('information_gaps', []))}
+- Response Strategy: {deliberation.get('response_strategy', 'Standard approach')}
+- Key Insights: {insights_str}
+- Information Gaps: {gaps_str}
 
 RELEVANT CONTEXT:
 {focused_context}
@@ -276,13 +286,17 @@ Generate a well-structured response that directly addresses the user's needs whi
     def _is_system_file(self, filename):
         """Check if file is a system file"""
         return any(keyword in filename.lower() for keyword in SYSTEM_FILES)
-
+    
 # Initialize enhanced RAG pipeline
 rag_pipeline = EnhancedRAGPipeline(OLLAMA_HOST, MCP_SERVER_URL)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/docs')
+def docs():
+    return render_template('docs.html')
 
 @app.route('/api/models', methods=['GET'])
 def get_models():

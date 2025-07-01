@@ -1,4 +1,69 @@
+version: '3.8'
+
 services:
+  # Vector Database - Qdrant for high-performance vector storage
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: vector-database
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC API
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Alternative: ChromaDB (uncomment to use instead of Qdrant)
+  # chromadb:
+  #   image: chromadb/chroma:0.4.18
+  #   container_name: vector-database-chroma
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - chroma_data:/chroma/chroma
+  #   environment:
+  #     - CHROMA_SERVER_HOST=0.0.0.0
+  #     - CHROMA_SERVER_HTTP_PORT=8000
+  #     - PERSIST_DIRECTORY=/chroma/chroma
+  #   restart: unless-stopped
+
+  # Enhanced Embedding Service with vector DB integration
+  embedding-service:
+    build: 
+      context: ./embedding-service
+      dockerfile: Dockerfile
+    container_name: embedding-service
+    ports:
+      - "8080:8080"
+    environment:
+      - FLASK_ENV=production
+      - VECTOR_DB_TYPE=qdrant  # or 'chroma'
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - VECTOR_COLLECTION=document_embeddings
+      - BATCH_SIZE=32
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Ollama LLM Server
   ollama:
     image: ollama/ollama:latest
     container_name: ollama-server
@@ -9,32 +74,21 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
-   # deploy:
-   #   resources:
-   #     reservations:
-   #       devices:
-   #         - driver: nvidia
-   #           count: all
-   #           capabilities: [gpu]
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
 
-  embedding-service:
-    build: ./embedding-service
-    container_name: embedding-service
-    ports:
-      - "8080:8080"
-    environment:
-      - FLASK_ENV=production
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
+  # Enhanced MCP Filesystem with Vector DB integration
   mcp-filesystem:
-    build: ./mcp-server
-    container_name: mcp-filesystem-server
+    build: 
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: mcp-filesystem
     ports:
       - "3000:3000"
     volumes:
@@ -42,8 +96,14 @@ services:
     environment:
       - NODE_ENV=production
       - EMBEDDING_SERVICE=http://embedding-service:8080
+      - VECTOR_DB_TYPE=qdrant
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - COLLECTION_NAME=document_embeddings
     depends_on:
       embedding-service:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -53,8 +113,11 @@ services:
       retries: 3
       start_period: 40s
 
+  # Enhanced Flask Application
   flask-app:
-    build: ./flask-app
+    build: 
+      context: ./flask-app
+      dockerfile: Dockerfile
     container_name: flask-ai-interface
     ports:
       - "5000:5000"
@@ -65,11 +128,53 @@ services:
       - OLLAMA_HOST=http://ollama:11434
       - MCP_SERVER_URL=http://mcp-filesystem:3000
       - EMBEDDING_SERVICE_URL=http://embedding-service:8080
+      - VECTOR_DB_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0  # For caching
     depends_on:
       - ollama
       - mcp-filesystem
-      - embedding-service  # Added missing dependency
+      - embedding-service
+      - qdrant
+    restart: unless-stopped
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vector Database Admin UI (optional)
+  qdrant-web-ui:
+    image: qdrant/qdrant-web-ui:latest
+    container_name: qdrant-web-ui
+    ports:
+      - "3001:80"
+    environment:
+      - QDRANT_API_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
     restart: unless-stopped
 
 volumes:
   ollama_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  chroma_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: local-ai-stack-network

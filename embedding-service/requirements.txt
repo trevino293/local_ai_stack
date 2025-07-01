@@ -1,3 +1,23 @@
+# Core Flask dependencies
 flask==3.0.0
-numpy==1.24.3
+flask-cors==4.0.0
 requests==2.31.0
+
+# Scientific computing
+numpy==1.24.3
+
+# Vector Database clients
+qdrant-client==1.7.3
+chromadb==0.4.18
+
+# Optional: Real sentence transformers (recommended for production)
+sentence-transformers==2.2.2
+torch==2.1.2
+transformers==4.36.2
+
+# Caching and performance
+redis==5.0.1
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.2

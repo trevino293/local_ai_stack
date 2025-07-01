@@ -55,6 +55,8 @@ DEFAULT_PRESETS = {
 # Enhanced RAG Pipeline with Deliberation and Conversation Context
 # Replace the entire EnhancedRAGPipeline class in your flask-app/app.py
 
+# Replace the VectorizedRAGPipeline class in your flask-app/app.py
+
 class VectorizedRAGPipeline:
     def __init__(self, ollama_host, mcp_server_url):
         self.ollama_host = ollama_host
@@ -159,6 +161,7 @@ Generate detailed response:"""
     def _semantic_search(self, query, top_k=3):
         """Search for relevant chunks using vector similarity"""
         try:
+            # Fixed: Use the correct MCP server endpoint
             response = requests.post(f"{self.mcp_server_url}/search", 
                 json={
                     'query': query,
@@ -169,9 +172,10 @@ Generate detailed response:"""
             )
             
             if response.ok:
-                return response.json().get('results', [])
+                data = response.json()
+                return data.get('results', [])
             else:
-                logging.error(f"Search failed: {response.status_code}")
+                logging.error(f"Search failed: {response.status_code} - {response.text}")
                 return []
                 
         except Exception as e:
@@ -305,7 +309,7 @@ Analysis:"""
     def _is_system_file(self, filename):
         """Check if file is a system file"""
         system_keywords = ['admin', 'system', 'default', 'config']
-        return any(keyword in filename.lower() for keyword in system_keywords) 
+        return any(keyword in filename.lower() for keyword in system_keywords)
 # Initialize enhanced RAG pipeline
 rag_pipeline = VectorizedRAGPipeline(OLLAMA_HOST, MCP_SERVER_URL)
 

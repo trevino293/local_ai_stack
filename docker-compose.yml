@@ -68,6 +68,7 @@ services:
     depends_on:
       - ollama
       - mcp-filesystem
+      - embedding-service  # Added missing dependency
     restart: unless-stopped
 
 volumes:

@@ -1,5 +1,5 @@
 ﻿// Simplified main.js - Fixed loading and clean interface
-let selectedModel = 'llama2';
+let selectedModel = 'llama3.2:3b';
 let selectedFiles = [];
 let systemFiles = [];
 let chatHistory = [];

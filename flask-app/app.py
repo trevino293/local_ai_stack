@@ -18,7 +18,7 @@ VECTOR_DB_URL = os.getenv('VECTOR_DB_URL', 'http://localhost:6333')
 
 # System files that should always be included as context
 SYSTEM_FILES = [
-    'admin', 'system', 'default', 'config', 'haag'
+    'admin', 'system', 'default', 'config'
 ]
 
 # In-memory storage
@@ -331,7 +331,7 @@ def chat():
     """Chat endpoint"""
     try:
         data = request.json
-        model = data.get('model', 'llama2')
+        model = data.get('model', 'llama3.2:3b')
         message = data.get('message', '')
         model_params = data.get('model_params', {})
         conversation_id = data.get('conversation_id', 'default')

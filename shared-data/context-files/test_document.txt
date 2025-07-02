@@ -1,6 +1,0 @@
-
-        Vector databases are essential for modern AI applications.
-        They enable semantic search by converting text into high-dimensional vectors.
-        Qdrant is a production-ready vector database with excellent performance.
-        The Local AI Stack uses vector embeddings for enhanced RAG capabilities.
-        

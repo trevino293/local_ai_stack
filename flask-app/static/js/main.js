@@ -231,9 +231,20 @@ async function loadFiles() {
     }
 }
 
-function createFileListItem(filename) {
+function createFileListItem(fileInfo) {
     const fileItem = document.createElement('div');
     fileItem.className = 'file-item';
+    
+    // Extract filename from either string or object
+    let filename, isVectorized = false, chunkCount = 0;
+    
+    if (typeof fileInfo === 'string') {
+        filename = fileInfo;
+    } else {
+        filename = fileInfo.name || fileInfo.filename;
+        isVectorized = fileInfo.vectorized || false;
+        chunkCount = fileInfo.chunkCount || 0;
+    }
     
     const isSystemFile = systemFiles.includes(filename);
     if (isSystemFile) {
@@ -253,11 +264,16 @@ function createFileListItem(filename) {
     }
     
     const label = document.createElement('label');
-    label.style.cssText = 'flex: 1; margin-left: 8px; cursor: pointer;';
+    label.style.cssText = 'flex: 1; margin-left: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;';
     label.textContent = filename;
     
     if (isSystemFile) {
         label.innerHTML += ' <span class="system-badge">SYSTEM</span>';
+    }
+    
+    // Add vectorization status indicator
+    if (isVectorized) {
+        label.innerHTML += ` <span style="background: var(--success); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">✓ ${chunkCount} chunks</span>`;
     }
     
     fileItem.appendChild(checkbox);
@@ -583,10 +599,12 @@ function removeDeliberationIndicator() {
 async function loadChatHistory() {
     try {
         const response = await fetch(`/api/chat/history?conversation_id=${currentConversationId}`);
-        const historyData = await response.json();
+        const data = await response.json();
         
         const historyList = document.getElementById('historyList');
         historyList.innerHTML = '';
+        
+        const historyData = data.history || [];
         
         if (historyData.length === 0) {
             historyList.innerHTML = '<p>No chat history yet</p>';
@@ -735,11 +753,11 @@ function updateStatusIndicator(service, isOnline) {
 }
 
 // Vector Database Stats
-function updateVectorStats(fileCount) {
+function updateVectorStats(totalVectors, fileCount) {
     const totalVectorsEl = document.getElementById('totalVectors');
     const indexedFilesEl = document.getElementById('indexedFiles');
     
-    if (totalVectorsEl) totalVectorsEl.textContent = fileCount * 10; // Estimate
+    if (totalVectorsEl) totalVectorsEl.textContent = totalVectors;
     if (indexedFilesEl) indexedFilesEl.textContent = fileCount;
 }
 

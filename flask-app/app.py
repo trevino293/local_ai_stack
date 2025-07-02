@@ -1007,7 +1007,10 @@ def is_system_file(filename):
     """Check if a file should be treated as a system file"""
     if not filename:
         return False
-    filename_lower = filename.lower()
+    # Handle both string and dict inputs
+    if isinstance(filename, dict):
+        filename = filename.get('name', '') or filename.get('filename', '')
+    filename_lower = str(filename).lower()
     return any(keyword in filename_lower for keyword in SYSTEM_FILES)
 
 def get_all_context_files():

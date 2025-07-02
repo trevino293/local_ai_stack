@@ -1,0 +1,56 @@
+{
+  "task": "Design a favicon/icon for dark-themed interfaces merging brain, robot, and shield motifs",
+  "visual_elements": {
+    "core_symbols": [
+      "Brain (intelligence/cognition)",
+      "Robot (machine/artificial intelligence)",
+      "Shield (privacy/security)"
+    ],
+    "integration": "Unified symbolic composition — not separate icons",
+    "style": "Modern, minimalist, geometric, high-contrast"
+  },
+  "color_palette": {
+    "primary": "#60a5fa",  // Sky blue for vivid contrast
+    "secondary": "#3b82f6",  // Medium blue for depth
+    "accent": "#93c5fd",  // Soft highlight for secondary lines
+    "outline": "#e0f2fe",  // Light blue/white for outlines
+    "background": "#0a0e27"  // Very dark navy blue background
+  },
+  "design_concepts": [
+    {
+      "name": "Cognitive Shield",
+      "description": "Shield shape formed using brain outline with subtle circuitry lines"
+    },
+    {
+      "name": "Neural Robot Mask",
+      "description": "Robot head silhouette with integrated brain-like ridges and shield border"
+    },
+    {
+      "name": "Core AI Node",
+      "description": "Circular or hex shield frame, brain in center, robot elements forming symmetry"
+    },
+    {
+      "name": "Tri-Stack Icon",
+      "description": "Stacked brain-robot-shield layers with glowing top contour"
+    }
+  ],
+  "technical_requirements": {
+    "sizes": ["16x16", "32x32", "64x64"],
+    "formats": ["PNG with transparency", "ICO multi-res"],
+    "contrast": "High contrast against dark backgrounds",
+    "text": false,
+    "monochromatic": false,
+    "color_usage": "Only shades of blue and white on dark background"
+  },
+  "visual_hierarchy": {
+    "foreground": "Bright shield outline",
+    "middle": "Brain shape with circuitry curves",
+    "background_detail": "Minimal robot components (eyes, antenna, or jaw)"
+  },
+  "style_constraints": {
+    "line_weight_32px": "2px",
+    "edge_glow": true,
+    "geometry": "Balanced symmetry, clean angles, soft curves",
+    "avoid": ["Text", "Gradients", "Complex shadows", "Overlapping clutter"]
+  }
+}

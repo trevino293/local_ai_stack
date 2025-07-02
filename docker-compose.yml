@@ -18,7 +18,7 @@ services:
       - QDRANT__SERVICE__ENABLE_CORS=true
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:6333/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,25 +67,23 @@ services:
 
   # Simplified Embedding Service (now just a proxy to vector DB)
   embedding-proxy:
-    build: 
-      context: ./embedding-proxy
-      dockerfile: Dockerfile
-    container_name: embedding-proxy
-    ports:
-      - "8080:8080"
-    environment:
-      - VECTOR_DB_URL=http://qdrant:6333
-      - VECTOR_DB_TYPE=qdrant
-      - EMBEDDING_ENDPOINT=http://qdrant:6333/collections/documents/points/search
-    depends_on:
-      qdrant:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      build: 
+        context: ./embedding-proxy
+        dockerfile: Dockerfile
+      container_name: embedding-proxy
+      ports:
+        - "8080:8080"
+      environment:
+        - VECTOR_DB_URL=http://qdrant:6333
+        - VECTOR_DB_TYPE=qdrant
+        - EMBEDDING_ENDPOINT=http://qdrant:6333/collections/documents/points/search
+      restart: unless-stopped
+      healthcheck:
+        test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+
 
   # Ollama LLM Server (unchanged)
   ollama:
@@ -124,10 +122,8 @@ services:
       - COLLECTION_NAME=documents
       - EMBEDDING_PROXY_URL=http://embedding-proxy:8080
     depends_on:
-      qdrant:
-        condition: service_healthy
-      embedding-proxy:
-        condition: service_healthy
+      - qdrant
+      - embedding-proxy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/status"]

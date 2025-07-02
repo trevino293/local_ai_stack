@@ -169,37 +169,65 @@ async function loadFiles() {
         
         if (fileArray.length === 0) {
             fileList.innerHTML = '<p>No files uploaded yet</p>';
+            updateVectorStats(0, 0);
             return;
         }
         
-        // Identify system files
-        systemFiles = fileArray.filter(filename => 
-            filename.toLowerCase().includes('admin') || 
-            filename.toLowerCase().includes('system') ||
-            filename.toLowerCase().includes('config')
-        );
+        // Clear previous selections
+        systemFiles = [];
         
-        // Auto-select system files
-        systemFiles.forEach(filename => {
-            if (!selectedFiles.includes(filename)) {
-                selectedFiles.push(filename);
+        // Process enhanced file data
+        let totalVectors = 0;
+        let vectorizedFiles = 0;
+        
+        fileArray.forEach(fileInfo => {
+            let filename, isVectorized = false, chunkCount = 0;
+            
+            // Handle both simple strings and enhanced objects
+            if (typeof fileInfo === 'string') {
+                filename = fileInfo;
+            } else {
+                filename = fileInfo.name || fileInfo.filename;
+                isVectorized = fileInfo.vectorized || false;
+                chunkCount = fileInfo.chunkCount || 0;
+            }
+            
+            // Identify system files
+            if (filename && (
+                filename.toLowerCase().includes('admin') || 
+                filename.toLowerCase().includes('system') ||
+                filename.toLowerCase().includes('config')
+            )) {
+                systemFiles.push(filename);
+                
+                // Auto-select system files if not already selected
+                if (!selectedFiles.includes(filename)) {
+                    selectedFiles.push(filename);
+                }
+            }
+            
+            // Count vectors
+            if (isVectorized) {
+                vectorizedFiles++;
+                totalVectors += chunkCount;
             }
         });
         
         // Render files
-        fileArray.forEach(filename => {
-            const fileItem = createFileListItem(filename);
+        fileArray.forEach(fileInfo => {
+            const fileItem = createFileListItem(fileInfo);
             fileList.appendChild(fileItem);
         });
         
-        // Update vector stats
-        updateVectorStats(fileArray.length);
+        // Update vector stats with actual data
+        updateVectorStats(totalVectors, vectorizedFiles);
         
-        console.log(`Loaded ${fileArray.length} files (${systemFiles.length} system files)`);
+        console.log(`Loaded ${fileArray.length} files (${systemFiles.length} system files, ${vectorizedFiles} vectorized)`);
         
     } catch (error) {
         console.error('Error loading files:', error);
         document.getElementById('fileList').innerHTML = '<p style="color: var(--error);">Failed to load files</p>';
+        updateVectorStats(0, 0);
     }
 }
 

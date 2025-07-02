@@ -1,16 +1,20 @@
 ﻿# LOCAL AI STACK [OL-MCP]
 
+<div align="center">
+  <img src="flask-app/static/images/logo.png" alt="Local AI Stack Logo" width="200" height="200">
+</div>
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│   ██╗      ██████╗  ██████╗ █████╗ ██╗         █████╗ ██╗     │
-│   ██║     ██╔═══██╗██╔════╝██╔══██╗██║        ██╔══██╗██║     │
-│   ██║     ██║   ██║██║     ███████║██║        ███████║██║     │
-│   ██║     ██║   ██║██║     ██╔══██║██║        ██╔══██║██║     │
-│   ███████╗╚██████╔╝╚██████╗██║  ██║███████╗   ██║  ██║██║     │
-│   ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝  ╚═╝╚═╝     │
+│   ██╗      ██████╗  ██████╗ █████╗ ██╗         █████╗ ██╗       │
+│   ██║     ██╔═══██╗██╔════╝██╔══██╗██║        ██╔══██╗██║       │
+│   ██║     ██║   ██║██║     ███████║██║        ███████║██║       │
+│   ██║     ██║   ██║██║     ██╔══██║██║        ██╔══██║██║       │
+│   ███████╗╚██████╔╝╚██████╗██║  ██║███████╗   ██║  ██║██║       │
+│   ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝  ╚═╝╚═╝       │
 │                                                                 │
-│   SELF-HOSTED // VECTOR-POWERED // PRIVACY-FIRST               │
+│   SELF-HOSTED // VECTOR-POWERED // PRIVACY-FIRST                │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -20,6 +24,9 @@
 [![Qdrant](https://img.shields.io/badge/QDRANT-VECTOR_DB-000000.svg?style=flat-square)](https://qdrant.tech)
 [![Python](https://img.shields.io/badge/PYTHON-3.11+-000000.svg?style=flat-square)](https://python.org)
 [![Node.js](https://img.shields.io/badge/NODE.JS-18+-000000.svg?style=flat-square)](https://nodejs.org)
+[![Stars](https://img.shields.io/github/stars/trevino293/local_ai_stack?style=flat-square&color=000000)](https://github.com/trevino293/local_ai_stack/stargazers)
+[![Forks](https://img.shields.io/github/forks/trevino293/local_ai_stack?style=flat-square&color=000000)](https://github.com/trevino293/local_ai_stack/network/members)
+[![Views](https://img.shields.io/badge/VIEWS-000000.svg?style=flat-square)](https://github.com/trevino293/local_ai_stack)
 
 ---
 
@@ -39,11 +46,11 @@ WHERE:   Your infrastructure, your control
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                                                             │
-│   [USER] ──────> :5000 FLASK ────┬───> :11434 OLLAMA       │
+│   [USER] ──────> :5000 FLASK ────┬───> :11434 OLLAMA        │
 │                        │         │                          │
 │                        │         └───> :3000 MCP ───┐       │
 │                        │                            │       │
-│                        └───> :6333 QDRANT <────────┘       │
+│                        └───> :6333 QDRANT <────────┘        │
 │                                    │                        │
 │                                    └─> PERSISTENT VECTORS   │
 │                                                             │
@@ -206,7 +213,7 @@ curl http://localhost:3000/vectors/stats
 ## PERFORMANCE
 
 ```
-┌─────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────┐
 │ OPERATION          │ FAST MODE │ DETAILED MODE │
 ├────────────────────┼───────────┼───────────────┤
 │ Simple Query       │ 2-3s      │ 5-7s          │

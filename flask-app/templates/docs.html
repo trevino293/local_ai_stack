@@ -3,229 +3,209 @@
 	<head>
 		<meta charset="UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>DOCS // LOCAL AI STACK [OL-MCP]</title>
+				<title>Local AI Stack Documentation - Local AI Stack (OL-MCP)</title>
 				<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 					<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 						<style>
-							/* BRUTALIST OVERRIDES */
-							* {
-							border-radius: 0 !important;
-							}
-
+							/* Documentation specific styles */
 							body {
-							font-family: 'Courier New', monospace;
+							font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 							min-height: 100vh;
 							display: flex;
 							flex-direction: column;
+							overflow-x: hidden;
 							}
 
-							h1, h2, h3, h4, h5, h6 {
-							font-family: 'Courier New', monospace;
-							text-transform: uppercase;
-							letter-spacing: 2px;
+							.docs-wrapper {
+							max-width: 1200px;
+							margin: 0 auto;
+							width: 100%;
+							padding: 0 20px;
 							}
 
 							.docs-container {
-							max-width: 1400px;
-							margin: 0 auto;
-							padding: 0;
 							flex: 1;
+							padding: 40px 0;
+							overflow-x: hidden;
 							}
 
+							.docs-content {
+							display: grid;
+							grid-template-columns: 240px minmax(0, 1fr);
+							gap: 30px;
+							width: 100%;
+							margin: 0 auto;
+							}
+
+							/* Navigation Panel */
 							.docs-nav {
 							position: sticky;
 							top: 20px;
-							height: calc(100vh - 40px);
+							height: fit-content;
+							max-height: calc(100vh - 40px);
 							overflow-y: auto;
 							background: var(--bg-secondary);
-							border: 2px solid var(--border-color);
-							padding: 30px;
-							margin-bottom: 40px;
-							}
-
-							.docs-nav::-webkit-scrollbar {
-							width: 8px;
-							}
-
-							.docs-nav::-webkit-scrollbar-track {
-							background: var(--bg-tertiary);
-							}
-
-							.docs-nav::-webkit-scrollbar-thumb {
-							background: var(--border-color);
-							}
-
-							.docs-nav::-webkit-scrollbar-thumb:hover {
-							background: var(--accent-blue);
+							border: 1px solid var(--border-color);
+							border-radius: 10px;
+							padding: 25px;
 							}
 
 							.docs-nav h3 {
 							color: var(--accent-light-blue);
-							margin-bottom: 30px;
-							font-size: 1.4rem;
-							border-bottom: 3px solid var(--accent-blue);
-							padding-bottom: 15px;
+							margin-bottom: 20px;
+							font-size: 1.2rem;
+							font-weight: 600;
 							}
 
 							.docs-nav ul {
 							list-style: none;
 							padding: 0;
-							}
-
-							.docs-nav li {
 							margin: 0;
-							border-left: 3px solid transparent;
-							transition: all 0.2s;
 							}
 
-							.docs-nav a {
+							.nav-section {
+							margin-bottom: 5px;
+							}
+
+							.nav-section > a {
+							display: flex;
+							align-items: center;
+							justify-content: space-between;
 							color: var(--text-primary);
 							text-decoration: none;
-							padding: 15px 20px;
-							display: block;
-							font-weight: 600;
-							transition: all 0.2s;
-							text-transform: uppercase;
+							padding: 12px 15px;
+							border-radius: 6px;
+							transition: all 0.3s;
+							font-weight: 500;
 							font-size: 0.9rem;
-							letter-spacing: 1px;
 							}
 
-							.docs-nav li:hover {
-							border-left-color: var(--accent-blue);
+							.nav-section > a:hover {
 							background: var(--bg-tertiary);
+							color: var(--accent-light-blue);
 							}
 
-							.docs-nav a.active {
-							background: var(--system-accent);
+							.nav-section > a.active {
+							background: var(--accent-blue);
 							color: white;
-							border-left: 3px solid var(--system-accent);
 							}
 
-							.docs-content {
-							display: grid;
-							grid-template-columns: 320px 1fr;
-							gap: 0;
+							.nav-toggle {
+							transition: transform 0.3s;
+							width: 16px;
+							height: 16px;
 							}
 
+							.nav-toggle.collapsed {
+							transform: rotate(-90deg);
+							}
+
+							.nav-subsection {
+							max-height: 0;
+							overflow: hidden;
+							transition: max-height 0.3s ease;
+							margin-left: 20px;
+							}
+
+							.nav-subsection.expanded {
+							max-height: 500px;
+							}
+
+							.nav-subsection a {
+							display: block;
+							color: var(--text-secondary);
+							text-decoration: none;
+							padding: 8px 15px;
+							border-radius: 4px;
+							transition: all 0.2s;
+							font-size: 0.85rem;
+							}
+
+							.nav-subsection a:hover {
+							background: var(--bg-tertiary);
+							color: var(--text-primary);
+							}
+
+							/* Main Content */
 							.docs-main {
 							background: var(--bg-secondary);
-							padding: 60px;
-							border: 2px solid var(--border-color);
-							min-height: 100vh;
+							padding: 40px;
+							border-radius: 10px;
+							border: 1px solid var(--border-color);
 							}
 
 							.docs-section {
-							margin-bottom: 80px;
-							scroll-margin-top: 100px;
+							margin-bottom: 60px;
+							scroll-margin-top: 80px;
 							}
 
 							.docs-section h2 {
 							color: var(--accent-light-blue);
-							margin-bottom: 40px;
-							padding-bottom: 20px;
-							border-bottom: 4px solid var(--accent-blue);
-							font-size: 2.5rem;
+							margin-bottom: 30px;
+							padding-bottom: 15px;
+							border-bottom: 2px solid var(--border-color);
+							font-size: 2rem;
 							}
 
 							.docs-section h3 {
 							color: var(--accent-light-blue);
-							margin: 40px 0 30px 0;
-							font-size: 1.8rem;
-							border-left: 5px solid var(--accent-blue);
-							padding-left: 20px;
+							margin: 30px 0 20px 0;
+							font-size: 1.5rem;
 							}
 
 							.docs-section h4 {
 							color: var(--text-primary);
-							margin: 30px 0 20px 0;
-							font-size: 1.4rem;
+							margin: 25px 0 15px 0;
+							font-size: 1.2rem;
 							}
 
 							.docs-section p {
 							color: var(--text-primary);
-							line-height: 1.8;
-							margin-bottom: 20px;
-							font-size: 1.1rem;
-							font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+							line-height: 1.7;
+							margin-bottom: 15px;
 							}
 
+							/* Feature Grid */
 							.feature-grid {
 							display: grid;
-							grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-							gap: 0;
-							margin: 40px 0;
-							border: 2px solid var(--border-color);
+							grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+							gap: 20px;
+							margin: 30px 0;
 							}
 
 							.feature-card {
 							background: var(--bg-tertiary);
 							border: 1px solid var(--border-color);
-							padding: 30px;
-							transition: all 0.2s;
-							position: relative;
+							border-radius: 8px;
+							padding: 25px;
+							transition: all 0.3s;
 							}
 
-							.feature-card::before {
-							content: '';
-							position: absolute;
-							top: 0;
-							left: 0;
-							width: 5px;
-							height: 100%;
-							background: var(--accent-blue);
-							transition: width 0.2s;
-							}
-
-							.feature-card:hover::before {
-							width: 100%;
-							opacity: 0.1;
+							.feature-card:hover {
+							border-color: var(--accent-blue);
+							transform: translateY(-2px);
+							box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 							}
 
 							.feature-card h4 {
 							color: var(--accent-light-blue);
-							margin-bottom: 20px;
-							font-size: 1.3rem;
-							position: relative;
-							z-index: 1;
+							margin-bottom: 15px;
+							font-size: 1.1rem;
 							}
 
 							.feature-card p {
 							color: var(--text-secondary);
-							font-size: 1rem;
-							line-height: 1.6;
+							font-size: 0.95rem;
 							margin: 0;
-							position: relative;
-							z-index: 1;
 							}
 
-							.architecture-diagram {
-							background: var(--bg-primary);
-							border: 3px solid var(--accent-blue);
-							padding: 40px;
-							margin: 40px 0;
-							font-family: 'Courier New', monospace;
-							overflow-x: auto;
-							position: relative;
-							}
-
-							.architecture-diagram::before {
-							content: '[SYSTEM ARCHITECTURE]';
-							position: absolute;
-							top: -15px;
-							left: 20px;
-							background: var(--bg-secondary);
-							padding: 5px 20px;
-							color: var(--accent-light-blue);
-							font-weight: 700;
-							font-size: 0.9rem;
-							letter-spacing: 2px;
-							}
-
+							/* Code Blocks */
 							.code-block {
 							background: var(--bg-primary);
-							border: 2px solid var(--border-color);
-							padding: 25px;
-							margin: 30px 0;
+							border: 1px solid var(--border-color);
+							border-radius: 8px;
+							padding: 20px;
+							margin: 20px 0;
 							overflow-x: auto;
 							position: relative;
 							}
@@ -233,88 +213,152 @@
 							.code-block pre {
 							margin: 0;
 							font-family: 'Courier New', monospace;
-							font-size: 0.95rem;
+							font-size: 0.9rem;
 							color: var(--text-primary);
 							white-space: pre;
 							overflow-x: auto;
 							}
 
 							.code-block::before {
-							content: '[CODE]';
+							content: 'CODE';
 							position: absolute;
 							top: 0;
 							right: 0;
 							background: var(--accent-blue);
 							color: white;
-							padding: 5px 15px;
-							font-weight: bold;
-							font-size: 0.8rem;
-							letter-spacing: 1px;
+							padding: 4px 12px;
+							font-weight: 500;
+							font-size: 0.75rem;
+							border-radius: 0 8px 0 8px;
 							}
 
+							/* Highlight Box */
 							.highlight-box {
 							background: var(--accent-blue);
 							color: white;
-							padding: 30px;
-							margin: 30px 0;
-							border: 3px solid var(--accent-light-blue);
-							position: relative;
-							}
-
-							.highlight-box::before {
-							content: '[!]';
-							position: absolute;
-							top: -20px;
-							left: 20px;
-							background: var(--bg-secondary);
-							color: var(--accent-light-blue);
-							padding: 5px 15px;
-							font-weight: bold;
-							font-size: 1.5rem;
+							padding: 25px;
+							margin: 25px 0;
+							border-radius: 8px;
 							}
 
 							.highlight-box h4 {
-							margin-bottom: 15px;
-							font-size: 1.4rem;
-							text-transform: uppercase;
-							letter-spacing: 2px;
+							color: white;
+							margin-bottom: 10px;
+							font-size: 1.2rem;
 							}
 
+							.highlight-box p {
+							color: white;
+							margin: 0;
+							}
+
+							/* Architecture Diagram */
+							.architecture-diagram {
+							background: var(--bg-primary);
+							border: 1px solid var(--border-color);
+							border-radius: 8px;
+							padding: 30px;
+							margin: 30px 0;
+							font-family: 'Courier New', monospace;
+							overflow-x: auto;
+							}
+
+							/* Tech Stack */
 							.tech-stack {
 							display: grid;
-							grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-							gap: 0;
-							margin: 30px 0;
-							border: 2px solid var(--border-color);
+							grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+							gap: 15px;
+							margin: 25px 0;
 							}
 
 							.tech-item {
 							background: var(--bg-tertiary);
 							border: 1px solid var(--border-color);
-							padding: 25px;
+							border-radius: 6px;
+							padding: 20px;
 							text-align: center;
-							transition: all 0.2s;
+							transition: all 0.3s;
 							}
 
 							.tech-item:hover {
 							background: var(--bg-primary);
-							border-color: var(--system-accent);
+							border-color: var(--accent-blue);
 							}
 
 							.tech-item h5 {
 							color: var(--accent-light-blue);
-							margin-bottom: 15px;
-							font-size: 1.2rem;
-							text-transform: uppercase;
-							letter-spacing: 1px;
+							margin-bottom: 10px;
+							font-size: 1rem;
 							}
 
 							.tech-item p {
 							color: var(--text-secondary);
-							font-size: 0.9rem;
+							font-size: 0.85rem;
 							margin: 0;
 							}
 
+							/* Tables */
+							.performance-table {
+							width: 100%;
+							border-collapse: collapse;
+							margin: 25px 0;
+							background: var(--bg-tertiary);
+							border-radius: 8px;
+							overflow: hidden;
+							}
+
+							.performance-table th {
+							background: var(--accent-blue);
+							color: white;
+							padding: 15px;
+							text-align: left;
+							font-weight: 600;
+							}
+
+							.performance-table td {
+							padding: 12px 15px;
+							border-bottom: 1px solid var(--border-color);
+							color: var(--text-primary);
+							}
+
+							.performance-table tbody tr:last-child td {
+							border-bottom: none;
+							}
+
+							.performance-table tbody tr:hover {
+							background: var(--bg-secondary);
+							}
+
+							/* API Grid */
+							.api-grid {
+							display: grid;
+							gap: 15px;
+							margin: 25px 0;
+							}
+
+							.api-section {
+							background: var(--bg-tertiary);
+							border: 1px solid var(--border-color);
+							border-radius: 6px;
+							padding: 20px;
+							}
+
+							.api-section h5 {
+							color: var(--accent-light-blue);
+							margin-bottom: 10px;
+							font-size: 1rem;
+							}
+
+							.api-section code {
+							background: var(--bg-primary);
+							padding: 2px 6px;
+							border-radius: 4px;
+							color: var(--accent-light-blue);
+							font-family: 'Courier New', monospace;
+							font-size: 0.85rem;
+							}
+
+							/* Back Link */
 							.back-link {
 							display: inline-flex;
 							align-items: center;
@@ -322,12 +366,11 @@
 							color: var(--accent-blue);
 							text-decoration: none;
 							margin-bottom: 30px;
-							padding: 15px 20px;
-							border: 2px solid var(--accent-blue);
-							transition: all 0.2s;
-							font-weight: 700;
-							text-transform: uppercase;
-							letter-spacing: 1px;
+							padding: 10px 20px;
+							border: 1px solid var(--accent-blue);
+							border-radius: 5px;
+							transition: all 0.3s;
+							font-weight: 500;
 							}
 
 							.back-link:hover {
@@ -335,126 +378,18 @@
 							color: white;
 							}
 
-							.performance-table {
-							width: 100%;
-							border-collapse: collapse;
-							margin: 30px 0;
-							background: var(--bg-tertiary);
-							border: 2px solid var(--border-color);
-							}
-
-							.performance-table th {
-							background: var(--accent-blue);
-							color: white;
-							padding: 20px;
-							text-align: left;
-							font-weight: 700;
-							text-transform: uppercase;
-							letter-spacing: 1px;
-							border: 1px solid var(--accent-blue);
-							}
-
-							.performance-table td {
-							padding: 15px 20px;
-							border: 1px solid var(--border-color);
-							color: var(--text-primary);
-							font-family: 'Courier New', monospace;
-							}
-
-							.performance-table tbody tr:hover {
-							background: var(--bg-secondary);
-							}
-
-							header {
-							border-bottom: 3px solid var(--border-color);
-							}
-
-							.header-content {
-							display: flex;
-							justify-content: space-between;
-							align-items: center;
-							padding: 30px 0;
-							}
-
-							.header-content h1 {
-							font-size: 2rem;
-							letter-spacing: 3px;
-							margin: 0;
-							}
-
-							.header-links {
-							display: flex;
-							gap: 0;
-							}
-
-							.header-links a {
-							display: flex;
-							align-items: center;
-							gap: 10px;
-							color: var(--text-primary);
-							text-decoration: none;
-							padding: 12px 20px;
-							border: 2px solid var(--border-color);
-							background: var(--bg-tertiary);
-							transition: all 0.2s;
-							font-size: 0.9rem;
-							font-weight: 700;
-							text-transform: uppercase;
-							letter-spacing: 1px;
-							margin-left: -2px;
-							}
-
-							.header-links a:first-child {
-							margin-left: 0;
-							}
-
-							.header-links a:hover {
-							background: var(--accent-blue);
-							border-color: var(--accent-blue);
-							color: white;
-							z-index: 1;
-							}
-
-							.api-grid {
-							display: grid;
-							gap: 0;
-							border: 2px solid var(--border-color);
-							margin: 30px 0;
-							}
-
-							.api-section {
-							padding: 25px;
-							border-bottom: 1px solid var(--border-color);
-							background: var(--bg-tertiary);
-							}
-
-							.api-section:last-child {
-							border-bottom: none;
-							}
-
-							.api-section h5 {
-							color: var(--accent-light-blue);
+							/* Lists */
+							.docs-section ul {
+							padding-left: 25px;
 							margin-bottom: 15px;
-							font-size: 1.1rem;
-							text-transform: uppercase;
-							letter-spacing: 1px;
 							}
 
-							.api-section code {
-							background: var(--bg-primary);
-							padding: 3px 8px;
-							color: var(--accent-light-blue);
-							font-family: 'Courier New', monospace;
-							font-size: 0.9rem;
+							.docs-section li {
+							margin-bottom: 8px;
+							color: var(--text-primary);
 							}
 
-							footer {
-							background: var(--bg-secondary);
-							border-top: 3px solid var(--border-color);
-							padding: 40px 0;
-							font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-							}
-
+							/* Responsive */
 							@media (max-width: 1024px) {
 							.docs-content {
 							grid-template-columns: 1fr;
@@ -462,18 +397,14 @@
 
 							.docs-nav {
 							position: static;
-							margin-bottom: 0;
-							height: auto;
-							}
-
-							.docs-main {
-							padding: 40px;
+							margin-bottom: 30px;
+							max-height: none;
 							}
 							}
 
 							@media (max-width: 768px) {
 							.docs-main {
-							padding: 20px;
+							padding: 25px;
 							}
 
 							.feature-grid {
@@ -489,560 +420,611 @@
 	<body>
 		<header>
 			<div class="container">
-				<div class="header-content">
-					<div style="display: flex; align-items: center; gap: 20px;">
-						<img src="{{ url_for('static', filename='images/logo.png') }}" alt="Local AI Stack Logo" style="width: 128px; height: 128px;">
-							<h1>LOCAL AI STACK // DOCUMENTATION</h1>
+				<div class="header-content" style="display: flex; justify-content: space-between; align-items: center;">
+					<div class="header-title" style="display: flex; align-items: center; gap: 20px;">
+						<img src="{{ url_for('static', filename='images/logo.png') }}" alt="Local AI Stack Logo" style="width: 128px; height: 128px; border-radius: 12px;">
+							<div>
+								<h1 style="margin: 0;">Local AI Stack Documentation</h1>
+								<div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">
+									Complete Guide to Vector Search & Enhanced RAG
+								</div>
+							</div>
 						</div>
-					<div class="header-links">
-						<a href="/">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+					<div class="header-links" style="display: flex; gap: 10px;">
+						<a href="/" style="
+                        display: flex; align-items: center; gap: 8px; color: var(--text-primary);
+                        text-decoration: none; padding: 8px 16px; border-radius: 5px;
+                        border: 1px solid var(--border-color); background: var(--bg-tertiary);
+                        transition: all 0.3s; font-size: 0.9rem; font-weight: 500;
+                    " onmouseover="this.style.background='var(--accent-blue)'; this.style.borderColor='var(--accent-blue)'; this.style.color='white';"
+						   onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)';">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
 								<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
 							</svg>
-							MAIN
+							Home
 						</a>
-						<a href="http://localhost:6333/dashboard" target="_blank">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+						<a href="http://localhost:6333/dashboard" target="_blank" style="
+                        display: flex; align-items: center; gap: 8px; color: var(--text-primary);
+                        text-decoration: none; padding: 8px 16px; border-radius: 5px;
+                        border: 1px solid var(--border-color); background: var(--bg-tertiary);
+                        transition: all 0.3s; font-size: 0.9rem; font-weight: 500;
+                    " onmouseover="this.style.background='var(--system-accent)'; this.style.borderColor='var(--system-accent)'; this.style.color='white';"
+						   onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)';">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
 								<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
 							</svg>
-							VECTOR DB
+							Vector DB
 						</a>
-						<a href="https://github.com/trevino293/local_ai_stack" target="_blank">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+						<a href="https://github.com/trevino293/local_ai_stack" target="_blank" style="
+                        display: flex; align-items: center; gap: 8px; color: var(--text-primary);
+                        text-decoration: none; padding: 8px 16px; border-radius: 5px;
+                        border: 1px solid var(--border-color); background: var(--bg-tertiary);
+                        transition: all 0.3s; font-size: 0.9rem; font-weight: 500;
+                    " onmouseover="this.style.background='var(--accent-blue)'; this.style.borderColor='var(--accent-blue)'; this.style.color='white';"
+						   onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)';">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
 								<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
 							</svg>
-							GITHUB
+							GitHub
 						</a>
 					</div>
 				</div>
 			</div>
 		</header>
 
-		<div class="docs-container">
-			<div class="docs-content">
-				<nav class="docs-nav">
-					<h3>CONTENTS</h3>
-					<ul>
-						<li>
-							<a href="#overview">OVERVIEW</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#overview-why" style="font-size: 0.85rem; text-transform: none;">Why Local AI Stack</a>
-								</li>
-								<li>
-									<a href="#overview-cases" style="font-size: 0.85rem; text-transform: none;">Use Cases</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#features">KEY FEATURES</a>
-						</li>
-						<li>
-							<a href="#vectorization">VECTORIZATION</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#vector-search" style="font-size: 0.85rem; text-transform: none;">Search Engine</a>
-								</li>
-								<li>
-									<a href="#vector-config" style="font-size: 0.85rem; text-transform: none;">Configuration</a>
-								</li>
-								<li>
-									<a href="#vector-perf" style="font-size: 0.85rem; text-transform: none;">Performance</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#architecture">ARCHITECTURE</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#arch-components" style="font-size: 0.85rem; text-transform: none;">Components</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#rag-pipeline">RAG PIPELINE</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#rag-stage1" style="font-size: 0.85rem; text-transform: none;">Stage 1: Analysis</a>
-								</li>
-								<li>
-									<a href="#rag-stage2" style="font-size: 0.85rem; text-transform: none;">Stage 2: Reasoning</a>
-								</li>
-								<li>
-									<a href="#rag-stage3" style="font-size: 0.85rem; text-transform: none;">Stage 3: Generation</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#reasoning">REASONING ENGINE</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#reasoning-steps" style="font-size: 0.85rem; text-transform: none;">6-Step Process</a>
-								</li>
-								<li>
-									<a href="#reasoning-confidence" style="font-size: 0.85rem; text-transform: none;">Confidence Algorithm</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#components">COMPONENTS</a>
-						</li>
-						<li>
-							<a href="#performance">PERFORMANCE</a>
-						</li>
-						<li>
-							<a href="#configuration">CONFIGURATION</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#config-params" style="font-size: 0.85rem; text-transform: none;">Model Parameters</a>
-								</li>
-								<li>
-									<a href="#config-vector" style="font-size: 0.85rem; text-transform: none;">Vector Settings</a>
-								</li>
-								<li>
-									<a href="#config-presets" style="font-size: 0.85rem; text-transform: none;">Presets</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#api">API REFERENCE</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#api-chat" style="font-size: 0.85rem; text-transform: none;">Chat Endpoints</a>
-								</li>
-								<li>
-									<a href="#api-vector" style="font-size: 0.85rem; text-transform: none;">Vector Operations</a>
-								</li>
-								<li>
-									<a href="#api-files" style="font-size: 0.85rem; text-transform: none;">File Management</a>
-								</li>
-								<li>
-									<a href="#api-system" style="font-size: 0.85rem; text-transform: none;">System Monitoring</a>
-								</li>
-							</ul>
-						</li>
-						<li>
-							<a href="#deployment">DEPLOYMENT</a>
-							<ul style="margin-left: 20px; margin-top: 5px;">
-								<li>
-									<a href="#deploy-quick" style="font-size: 0.85rem; text-transform: none;">Quick Start</a>
-								</li>
-								<li>
-									<a href="#deploy-prod" style="font-size: 0.85rem; text-transform: none;">Production</a>
-								</li>
-								<li>
-									<a href="#deploy-security" style="font-size: 0.85rem; text-transform: none;">Security</a>
-								</li>
-							</ul>
-						</li>
-					</ul>
-				</nav>
-
-				<main class="docs-main">
-					<section class="docs-section" id="overview">
-						<h2>OVERVIEW</h2>
-
-						<p>Local AI Stack [OL-MCP] is a self-hosted AI chat interface that brings enterprise-grade conversational AI capabilities to your local infrastructure. Built with privacy, performance, and extensibility at its core.</p>
-
-						<div class="highlight-box">
-							<h4>MISSION STATEMENT</h4>
-							<p>Democratize access to advanced AI capabilities while maintaining complete data privacy through local deployment with cutting-edge vectorization and multi-step reasoning systems.</p>
-						</div>
-
-						<h3 id="overview-why">WHY LOCAL AI STACK</h3>
-
-						<ul style="list-style: none; padding-left: 0;">
-							<li style="padding: 10px 0;">
-								<strong>COMPLETE PRIVACY:</strong> All data processing happens locally - no external API calls
+		<div class="docs-wrapper">
+			<div class="docs-container">
+				<div class="docs-content">
+					<nav class="docs-nav">
+						<h3>Table of Contents</h3>
+						<ul>
+							<li class="nav-section">
+								<a href="#overview" onclick="toggleSection(event, 'overview-sub')">
+									Overview
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="overview-sub" class="nav-subsection">
+									<li>
+										<a href="#overview-why">Why Local AI Stack</a>
+									</li>
+									<li>
+										<a href="#overview-cases">Use Cases</a>
+									</li>
+								</ul>
 							</li>
-							<li style="padding: 10px 0;">
-								<strong>VECTOR SEARCH:</strong> Qdrant-powered persistent semantic search with 384-dimensional embeddings
+							<li class="nav-section">
+								<a href="#features">Key Features</a>
 							</li>
-							<li style="padding: 10px 0;">
-								<strong>REASONING ENGINE:</strong> Six-stage deliberation system with transparent processing
+							<li class="nav-section">
+								<a href="#vectorization" onclick="toggleSection(event, 'vector-sub')">
+									Vectorization
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="vector-sub" class="nav-subsection">
+									<li>
+										<a href="#vector-search">Search Engine</a>
+									</li>
+									<li>
+										<a href="#vector-config">Configuration</a>
+									</li>
+									<li>
+										<a href="#vector-perf">Performance</a>
+									</li>
+								</ul>
 							</li>
-							<li style="padding: 10px 0;">
-								<strong>CONTEXT AWARE:</strong> Intelligent RAG pipeline with citation tracking and confidence scoring
+							<li class="nav-section">
+								<a href="#architecture" onclick="toggleSection(event, 'arch-sub')">
+									Architecture
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="arch-sub" class="nav-subsection">
+									<li>
+										<a href="#arch-components">Components</a>
+									</li>
+								</ul>
 							</li>
-							<li style="padding: 10px 0;">
-								<strong>ENTERPRISE READY:</strong> Professional interface with conversation management
+							<li class="nav-section">
+								<a href="#rag-pipeline" onclick="toggleSection(event, 'rag-sub')">
+									RAG Pipeline
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="rag-sub" class="nav-subsection">
+									<li>
+										<a href="#rag-stage1">Stage 1: Analysis</a>
+									</li>
+									<li>
+										<a href="#rag-stage2">Stage 2: Reasoning</a>
+									</li>
+									<li>
+										<a href="#rag-stage3">Stage 3: Generation</a>
+									</li>
+								</ul>
 							</li>
-							<li style="padding: 10px 0;">
-								<strong>MODEL FLEXIBILITY:</strong> Support for multiple Ollama models with dynamic switching
+							<li class="nav-section">
+								<a href="#reasoning" onclick="toggleSection(event, 'reasoning-sub')">
+									Reasoning Engine
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="reasoning-sub" class="nav-subsection">
+									<li>
+										<a href="#reasoning-steps">6-Step Process</a>
+									</li>
+									<li>
+										<a href="#reasoning-confidence">Confidence Algorithm</a>
+									</li>
+								</ul>
 							</li>
-							<li style="padding: 10px 0;">
-								<strong>EASY DEPLOYMENT:</strong> Docker Compose setup with automatic service orchestration
+							<li class="nav-section">
+								<a href="#components">Components</a>
+							</li>
+							<li class="nav-section">
+								<a href="#performance">Performance</a>
+							</li>
+							<li class="nav-section">
+								<a href="#configuration" onclick="toggleSection(event, 'config-sub')">
+									Configuration
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="config-sub" class="nav-subsection">
+									<li>
+										<a href="#config-params">Model Parameters</a>
+									</li>
+									<li>
+										<a href="#config-vector">Vector Settings</a>
+									</li>
+									<li>
+										<a href="#config-presets">Presets</a>
+									</li>
+								</ul>
+							</li>
+							<li class="nav-section">
+								<a href="#api" onclick="toggleSection(event, 'api-sub')">
+									API Reference
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="api-sub" class="nav-subsection">
+									<li>
+										<a href="#api-chat">Chat Endpoints</a>
+									</li>
+									<li>
+										<a href="#api-vector">Vector Operations</a>
+									</li>
+									<li>
+										<a href="#api-files">File Management</a>
+									</li>
+									<li>
+										<a href="#api-system">System Monitoring</a>
+									</li>
+								</ul>
+							</li>
+							<li class="nav-section">
+								<a href="#deployment" onclick="toggleSection(event, 'deploy-sub')">
+									Deployment
+									<svg class="nav-toggle collapsed" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+									</svg>
+								</a>
+								<ul id="deploy-sub" class="nav-subsection">
+									<li>
+										<a href="#deploy-quick">Quick Start</a>
+									</li>
+									<li>
+										<a href="#deploy-prod">Production</a>
+									</li>
+									<li>
+										<a href="#deploy-security">Security</a>
+									</li>
+								</ul>
 							</li>
 						</ul>
+					</nav>
 
-						<h3 id="overview-cases">USE CASES</h3>
+					<main class="docs-main">
+						<section class="docs-section" id="overview">
+							<h2>Overview</h2>
+							<p>Local AI Stack (OL-MCP) is a self-hosted AI chat interface that brings enterprise-grade conversational AI capabilities to your local infrastructure. Built with privacy, performance, and extensibility at its core.</p>
 
-						<div class="feature-grid">
-							<div class="feature-card">
-								<h4>RESEARCH & DEVELOPMENT</h4>
-								<p>Analyze documents with semantic search, generate insights with full citation tracking and confidence scoring</p>
-							</div>
-							<div class="feature-card">
-								<h4>EDUCATION & LEARNING</h4>
-								<p>Interactive learning with reasoning transparency, confidence indicators, and multi-step problem solving</p>
-							</div>
-							<div class="feature-card">
-								<h4>CONTENT CREATION</h4>
-								<p>Creative writing and brainstorming with adjustable creativity parameters and context-aware suggestions</p>
-							</div>
-							<div class="feature-card">
-								<h4>CODE DEVELOPMENT</h4>
-								<p>Programming assistance with context-aware responses, code analysis, and reasoning explanations</p>
-							</div>
-						</div>
-					</section>
-
-					<section class="docs-section" id="features">
-						<h2>KEY FEATURES</h2>
-
-						<div class="feature-grid">
-							<div class="feature-card">
-								<h4>VECTOR SEARCH ENGINE</h4>
-								<p>Qdrant-powered semantic search with 384-dimensional embeddings, cosine similarity ranking, and persistent storage.</p>
+							<div class="highlight-box">
+								<h4>Mission Statement</h4>
+								<p>Democratize access to advanced AI capabilities while maintaining complete data privacy through local deployment with cutting-edge vectorization and multi-step reasoning systems.</p>
 							</div>
 
-							<div class="feature-card">
-								<h4>MULTI-STEP REASONING</h4>
-								<p>Six-stage deliberation process: decomposition, evidence gathering, pattern identification, hypothesis formation, verification, and synthesis.</p>
+							<h3 id="overview-why">Why Local AI Stack</h3>
+							<ul>
+								<li>
+									<strong>Complete Privacy:</strong> All data processing happens locally - no external API calls
+								</li>
+								<li>
+									<strong>Vector Search:</strong> Qdrant-powered persistent semantic search with 384-dimensional embeddings
+								</li>
+								<li>
+									<strong>Reasoning Engine:</strong> Six-stage deliberation system with transparent processing
+								</li>
+								<li>
+									<strong>Context Aware:</strong> Intelligent RAG pipeline with citation tracking and confidence scoring
+								</li>
+								<li>
+									<strong>Enterprise Ready:</strong> Professional interface with conversation management
+								</li>
+								<li>
+									<strong>Model Flexibility:</strong> Support for multiple Ollama models with dynamic switching
+								</li>
+								<li>
+									<strong>Easy Deployment:</strong> Docker Compose setup with automatic service orchestration
+								</li>
+							</ul>
+
+							<h3 id="overview-cases">Use Cases</h3>
+							<div class="feature-grid">
+								<div class="feature-card">
+									<h4>Research & Development</h4>
+									<p>Analyze documents with semantic search, generate insights with full citation tracking and confidence scoring</p>
+								</div>
+								<div class="feature-card">
+									<h4>Education & Learning</h4>
+									<p>Interactive learning with reasoning transparency, confidence indicators, and multi-step problem solving</p>
+								</div>
+								<div class="feature-card">
+									<h4>Content Creation</h4>
+									<p>Creative writing and brainstorming with adjustable creativity parameters and context-aware suggestions</p>
+								</div>
+								<div class="feature-card">
+									<h4>Code Development</h4>
+									<p>Programming assistance with context-aware responses, code analysis, and reasoning explanations</p>
+								</div>
+							</div>
+						</section>
+
+						<section class="docs-section" id="features">
+							<h2>Key Features</h2>
+							<div class="feature-grid">
+								<div class="feature-card">
+									<h4>Vector Search Engine</h4>
+									<p>Qdrant-powered semantic search with 384-dimensional embeddings, cosine similarity ranking, and persistent storage.</p>
+								</div>
+								<div class="feature-card">
+									<h4>Multi-Step Reasoning</h4>
+									<p>Six-stage deliberation process: decomposition, evidence gathering, pattern identification, hypothesis formation, verification, and synthesis.</p>
+								</div>
+								<div class="feature-card">
+									<h4>Confidence Scoring</h4>
+									<p>AI-generated confidence levels (1-10) with detailed breakdowns covering context quality, information completeness, and reasoning validation.</p>
+								</div>
+								<div class="feature-card">
+									<h4>Smart Citations</h4>
+									<p>Automatic source references with file-level tracking, system/user file distinction, and relevance scoring.</p>
+								</div>
+								<div class="feature-card">
+									<h4>Context Continuity</h4>
+									<p>Maintains conversation history across sessions with intelligent context integration and topic tracking.</p>
+								</div>
+								<div class="feature-card">
+									<h4>Advanced Configuration</h4>
+									<p>Preset parameter configurations, custom saved settings, real-time adjustment, and fast/detailed processing modes.</p>
+								</div>
+							</div>
+						</section>
+
+						<section class="docs-section" id="vectorization">
+							<h2>Vectorization & Semantic Search</h2>
+
+							<div class="highlight-box">
+								<h4>Qdrant Vector Database</h4>
+								<p>Production-grade vector database with persistent storage, real-time indexing, and built-in dashboard for monitoring and management.</p>
 							</div>
 
-							<div class="feature-card">
-								<h4>CONFIDENCE SCORING</h4>
-								<p>AI-generated confidence levels (1-10) with detailed breakdowns covering context quality, information completeness, and reasoning validation.</p>
+							<h3 id="vector-search">Semantic Search Engine</h3>
+							<p>The vectorization system transforms all uploaded documents into high-dimensional vector representations, enabling semantic similarity search that goes beyond keyword matching.</p>
+
+							<div class="tech-stack">
+								<div class="tech-item">
+									<h5>Embedding Model</h5>
+									<p>
+										384-dimensional vectors<br/>Cosine similarity
+									</p>
+								</div>
+								<div class="tech-item">
+									<h5>Search Algorithm</h5>
+									<p>
+										Weighted ranking<br/>System file priority
+									</p>
+								</div>
+								<div class="tech-item">
+									<h5>Context Ranking</h5>
+									<p>
+										Relevance-based selection<br/>Configurable thresholds
+									</p>
+								</div>
+								<div class="tech-item">
+									<h5>Processing Modes</h5>
+									<p>
+										Fast: 3 chunks<br/>Detailed: 5+ chunks
+									</p>
+								</div>
 							</div>
 
-							<div class="feature-card">
-								<h4>SMART CITATIONS</h4>
-								<p>Automatic source references with file-level tracking, system/user file distinction, and relevance scoring.</p>
-							</div>
-
-							<div class="feature-card">
-								<h4>CONTEXT CONTINUITY</h4>
-								<p>Maintains conversation history across sessions with intelligent context integration and topic tracking.</p>
-							</div>
-
-							<div class="feature-card">
-								<h4>ADVANCED CONFIGURATION</h4>
-								<p>Preset parameter configurations, custom saved settings, real-time adjustment, and fast/detailed processing modes.</p>
-							</div>
-						</div>
-					</section>
-
-					<section class="docs-section" id="vectorization">
-						<h2>VECTORIZATION & SEMANTIC SEARCH</h2>
-
-						<div class="highlight-box">
-							<h4>QDRANT VECTOR DATABASE</h4>
-							<p>Production-grade vector database with persistent storage, real-time indexing, and built-in dashboard for monitoring and management.</p>
-						</div>
-
-						<h3 id="vector-search">SEMANTIC SEARCH ENGINE</h3>
-						<p>The vectorization system transforms all uploaded documents into high-dimensional vector representations, enabling semantic similarity search that goes beyond keyword matching.</p>
-
-						<div class="tech-stack">
-							<div class="tech-item">
-								<h5>EMBEDDING MODEL</h5>
-								<p>
-									384-dimensional vectors<br/>Cosine similarity
-								</p>
-							</div>
-							<div class="tech-item">
-								<h5>SEARCH ALGORITHM</h5>
-								<p>
-									Weighted ranking<br/>System file priority
-								</p>
-							</div>
-							<div class="tech-item">
-								<h5>CONTEXT RANKING</h5>
-								<p>
-									Relevance-based selection<br/>Configurable thresholds
-								</p>
-							</div>
-							<div class="tech-item">
-								<h5>PROCESSING MODES</h5>
-								<p>
-									Fast: 3 chunks<br/>Detailed: 5+ chunks
-								</p>
-							</div>
-						</div>
-
-						<h3 id="vector-config">SEARCH CONFIGURATION</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="vector-config">Search Configuration</h3>
+							<div class="code-block">
+								<pre>
 									# Vectorization Settings
 									SIMILARITY_THRESHOLD: 0.1        # Minimum relevance score
 									TOP_K_CHUNKS: 3-5                # Number of chunks per query
 									CHUNK_SIZE: 512                  # Tokens per chunk
 									CHUNK_OVERLAP: 50                # Overlap between chunks
 									EMBEDDING_DIMENSIONS: 384        # Vector dimensions
-								</code>
-							</pre>
-						</div>
-
-						<h3 id="vector-perf">SEARCH PERFORMANCE</h3>
-						<table class="performance-table">
-							<thead>
-								<tr>
-									<th>OPERATION</th>
-									<th>FAST MODE</th>
-									<th>DETAILED MODE</th>
-									<th>ACCURACY</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>
-										<strong>SIMPLE QUERY</strong>
-									</td>
-									<td>~2-3s</td>
-									<td>~5-7s</td>
-									<td>85-90%</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>COMPLEX ANALYSIS</strong>
-									</td>
-									<td>~4-6s</td>
-									<td>~10-15s</td>
-									<td>90-95%</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>MULTI-DOCUMENT</strong>
-									</td>
-									<td>~3-5s</td>
-									<td>~8-12s</td>
-									<td>88-92%</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>VECTOR SEARCH</strong>
-									</td>
-									<td>&lt;100ms</td>
-									<td>&lt;200ms</td>
-									<td>INDEXED</td>
-								</tr>
-							</tbody>
-						</table>
-					</section>
-
-					<section class="docs-section" id="architecture">
-						<h2>SYSTEM ARCHITECTURE</h2>
-
-						<div class="architecture-diagram">
-							<pre>
-								┌─────────────────────────────────────────────────────────────────────────────────┐
-								│                             SYSTEM OVERVIEW                                     │
-								├─────────────────────────────────────────────────────────────────────────────────┤
-								│                                                                                 │
-								│  ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────────┐ │
-								│  │   FLASK WEB UI  │────▶│  MCP FILESYSTEM  │────▶│    SHARED STORAGE       │ │
-								│  │   (PORT 5000)   │     │   (PORT 3000)    │     │   /workspace            │ │
-								│  │                 │     │                  │     │                         │ │
-								│  │ • ENHANCED RAG  │     │ • FILE UPLOAD    │     │ • SYSTEM FILES          │ │
-								│  │ • MULTI-STAGE   │     │ • VECTORIZATION  │     │ • USER FILES            │ │
-								│  │   REASONING     │     │ • CRUD OPS       │     │ • DOCUMENTS             │ │
-								│  │ • CONFIDENCE    │     │ • SEARCH API     │     │                         │ │
-								│  │   SCORING       │     │                  │     │                         │ │
-								│  └────────┬────────┘     └─────────┬────────┘     └─────────────────────────┘ │
-								│           │                         │                                           │
-								│           ▼                         ▼                                           │
-								│  ┌─────────────────┐     ┌──────────────────┐                                  │
-								│  │  OLLAMA SERVER  │     │  QDRANT VECTOR   │                                  │
-								│  │  (PORT 11434)   │     │  (PORT 6333)     │                                  │
-								│  │                 │     │                  │                                  │
-								│  │ • MODEL HOSTING │     │ • PERSISTENT     │                                  │
-								│  │ • GPU SUPPORT   │     │   STORAGE        │                                  │
-								│  │ • API GATEWAY   │     │ • VECTOR INDEX   │                                  │
-								│  │ • LLM INFERENCE │     │ • SIMILARITY     │                                  │
-								│  └─────────────────┘     │   SEARCH         │                                  │
-								│                          │ • DASHBOARD      │                                  │
-								│                          └──────────────────┘                                  │
-								│                                                                                 │
-								└─────────────────────────────────────────────────────────────────────────────────┘
-							</pre>
-						</div>
-
-						<h3 id="arch-components">COMPONENT RESPONSIBILITIES</h3>
-
-						<h4>FLASK APPLICATION (PYTHON)</h4>
-						<ul>
-							<li>Enhanced RAG pipeline with Qdrant integration</li>
-							<li>Multi-step reasoning with confidence scoring</li>
-							<li>Session management and conversation state</li>
-							<li>Parameter persistence and preset management</li>
-							<li>Real-time status monitoring and performance metrics</li>
-						</ul>
-
-						<h4>MCP FILESYSTEM SERVER (NODE.JS)</h4>
-						<ul>
-							<li>File upload with automatic vectorization</li>
-							<li>Direct embedding generation (384-dim)</li>
-							<li>Semantic search API with Qdrant backend</li>
-							<li>System file protection and access control</li>
-							<li>RESTful API for file and search operations</li>
-						</ul>
-
-						<h4>QDRANT VECTOR DATABASE</h4>
-						<ul>
-							<li>Persistent vector storage and indexing</li>
-							<li>High-performance similarity search</li>
-							<li>Collection management and monitoring</li>
-							<li>Built-in dashboard for vector visualization</li>
-							<li>Scalable architecture for large datasets</li>
-						</ul>
-
-						<h4>OLLAMA SERVER</h4>
-						<ul>
-							<li>Local LLM hosting and inference</li>
-							<li>Model management and switching</li>
-							<li>GPU acceleration support</li>
-							<li>Parameter-based text generation</li>
-						</ul>
-					</section>
-
-					<section class="docs-section" id="rag-pipeline">
-						<h2>ENHANCED RAG PIPELINE</h2>
-
-						<p>The core innovation of Local AI Stack is its vectorized RAG (Retrieval-Augmented Generation) pipeline that combines semantic search with multi-stage reasoning for unprecedented response quality and transparency.</p>
-
-						<div class="architecture-diagram">
-							<pre>
-								VECTORIZED RAG PIPELINE FLOW:
-
-								USER QUERY ──┐
-								│
-								CONTEXT FILES┼─→ [VECTORIZATION] ──┐
-								│   • EMBED QUERY      │
-								CONVERSATION │   • SEMANTIC SEARCH  │
-								HISTORY   ───┘   • RANK BY RELEVANCE│
-								│
-								▼
-								[STAGE 1: SEMANTIC ANALYSIS]
-								• ANALYZE QUERY INTENT
-								• SELECT RELEVANT CHUNKS
-								• SCORE CONTEXT QUALITY
-								│
-								▼
-								[STAGE 2: DELIBERATION]
-								• MULTI-STEP REASONING
-								• CONFIDENCE ASSESSMENT
-								• CITATION PLANNING
-								│
-								▼
-								[STAGE 3: RESPONSE GENERATION]
-								• GENERATE FINAL ANSWER
-								• APPLY REASONING INSIGHTS
-								• INCLUDE CITATIONS
-								• MAINTAIN CONTEXT
-								│
-								▼
-								ENHANCED RESPONSE + METADATA
-							</pre>
-						</div>
-
-						<h3 id="rag-stage1">STAGE 1: SEMANTIC ANALYSIS</h3>
-						<p>The vectorization stage transforms queries and documents into semantic representations:</p>
-						<ul>
-							<li>
-								<strong>QUERY EMBEDDING:</strong> Convert user questions into 384-dimensional vectors
-							</li>
-							<li>
-								<strong>SIMILARITY SEARCH:</strong> Find most relevant document chunks in Qdrant
-							</li>
-							<li>
-								<strong>CONTEXT RANKING:</strong> Score chunks by relevance with system file priority
-							</li>
-							<li>
-								<strong>QUALITY ASSESSMENT:</strong> Evaluate context completeness and coverage
-							</li>
-						</ul>
-
-						<h3 id="rag-stage2">STAGE 2: MULTI-STEP REASONING</h3>
-						<p>The deliberation stage uses enhanced reasoning to analyze the problem:</p>
-						<ul>
-							<li>
-								<strong>PROBLEM DECOMPOSITION:</strong> Break complex queries into manageable components
-							</li>
-							<li>
-								<strong>EVIDENCE EVALUATION:</strong> Assess quality and relevance of available information
-							</li>
-							<li>
-								<strong>PATTERN RECOGNITION:</strong> Identify reasoning patterns and solution strategies
-							</li>
-							<li>
-								<strong>HYPOTHESIS FORMATION:</strong> Generate and evaluate potential approaches
-							</li>
-							<li>
-								<strong>LOGIC VERIFICATION:</strong> Validate reasoning consistency and completeness
-							</li>
-							<li>
-								<strong>STRATEGY SYNTHESIS:</strong> Combine insights into optimal response strategy
-							</li>
-						</ul>
-
-						<h3 id="rag-stage3">STAGE 3: RESPONSE GENERATION</h3>
-						<p>The final stage produces enhanced responses with full transparency:</p>
-						<ul>
-							<li>
-								<strong>CONTEXTUAL ANSWERS:</strong> Responses informed by semantic search results
-							</li>
-							<li>
-								<strong>SMART CITATIONS:</strong> Automatic source references with relevance scores
-							</li>
-							<li>
-								<strong>CONFIDENCE METRICS:</strong> Detailed confidence breakdowns and reasoning traces
-							</li>
-							<li>
-								<strong>CONVERSATION CONTINUITY:</strong> Maintain context across multi-turn conversations
-							</li>
-						</ul>
-					</section>
-
-					<section class="docs-section" id="reasoning">
-						<h2>MULTI-STEP REASONING SYSTEM</h2>
-
-						<p>The multi-step reasoning system provides unprecedented transparency into AI decision-making processes, allowing users to understand exactly how responses are formulated.</p>
-
-						<h3 id="reasoning-steps">6-STEP PROCESS</h3>
-
-						<div class="feature-grid">
-							<div class="feature-card">
-								<h4>1. PROBLEM DECOMPOSITION</h4>
-								<p>Analyzes query complexity, identifies sub-components, and categorizes the type of reasoning required.</p>
+								</pre>
 							</div>
-							<div class="feature-card">
-								<h4>2. EVIDENCE GATHERING</h4>
-								<p>Ranks available sources, assesses information quality, and identifies coverage gaps.</p>
-							</div>
-							<div class="feature-card">
-								<h4>3. PATTERN IDENTIFICATION</h4>
-								<p>Recognizes reasoning patterns, selects appropriate problem-solving strategies, and maps solution approaches.</p>
-							</div>
-							<div class="feature-card">
-								<h4>4. HYPOTHESIS FORMATION</h4>
-								<p>Generates candidate approaches, evaluates feasibility, and selects optimal strategy.</p>
-							</div>
-							<div class="feature-card">
-								<h4>5. VERIFICATION</h4>
-								<p>Validates logical consistency, checks completeness, and identifies potential errors or gaps.</p>
-							</div>
-							<div class="feature-card">
-								<h4>6. SYNTHESIS</h4>
-								<p>Combines insights, structures final response, and prepares citation targets.</p>
-							</div>
-						</div>
 
-						<h3 id="reasoning-confidence">CONFIDENCE SCORING ALGORITHM</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="vector-perf">Search Performance</h3>
+							<table class="performance-table">
+								<thead>
+									<tr>
+										<th>Operation</th>
+										<th>Fast Mode</th>
+										<th>Detailed Mode</th>
+										<th>Accuracy</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<strong>Simple Query</strong>
+										</td>
+										<td>~2-3s</td>
+										<td>~5-7s</td>
+										<td>85-90%</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Complex Analysis</strong>
+										</td>
+										<td>~4-6s</td>
+										<td>~10-15s</td>
+										<td>90-95%</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Multi-Document</strong>
+										</td>
+										<td>~3-5s</td>
+										<td>~8-12s</td>
+										<td>88-92%</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Vector Search</strong>
+										</td>
+										<td>&lt;100ms</td>
+										<td>&lt;200ms</td>
+										<td>Indexed</td>
+									</tr>
+								</tbody>
+							</table>
+						</section>
+
+						<section class="docs-section" id="architecture">
+							<h2>System Architecture</h2>
+
+							<div class="architecture-diagram">
+								<pre>
+									┌─────────────────────────────────────────────────────────────────────────────────┐
+									│                             SYSTEM OVERVIEW                                     │
+									├─────────────────────────────────────────────────────────────────────────────────┤
+									│                                                                                 │
+									│  ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────────┐ │
+									│  │   FLASK WEB UI  │────▶│  MCP FILESYSTEM  │────▶│    SHARED STORAGE       │ │
+									│  │   (PORT 5000)   │     │   (PORT 3000)    │     │   /workspace            │ │
+									│  │                 │     │                  │     │                         │ │
+									│  │ • ENHANCED RAG  │     │ • FILE UPLOAD    │     │ • SYSTEM FILES          │ │
+									│  │ • MULTI-STAGE   │     │ • VECTORIZATION  │     │ • USER FILES            │ │
+									│  │   REASONING     │     │ • CRUD OPS       │     │ • DOCUMENTS             │ │
+									│  │ • CONFIDENCE    │     │ • SEARCH API     │     │                         │ │
+									│  │   SCORING       │     │                  │     │                         │ │
+									│  └────────┬────────┘     └─────────┬────────┘     └─────────────────────────┘ │
+									│           │                         │                                           │
+									│           ▼                         ▼                                           │
+									│  ┌─────────────────┐     ┌──────────────────┐                                  │
+									│  │  OLLAMA SERVER  │     │  QDRANT VECTOR   │                                  │
+									│  │  (PORT 11434)   │     │  (PORT 6333)     │                                  │
+									│  │                 │     │                  │                                  │
+									│  │ • MODEL HOSTING │     │ • PERSISTENT     │                                  │
+									│  │ • GPU SUPPORT   │     │   STORAGE        │                                  │
+									│  │ • API GATEWAY   │     │ • VECTOR INDEX   │                                  │
+									│  │ • LLM INFERENCE │     │ • SIMILARITY     │                                  │
+									│  └─────────────────┘     │   SEARCH         │                                  │
+									│                          │ • DASHBOARD      │                                  │
+									│                          └──────────────────┘                                  │
+									│                                                                                 │
+									└─────────────────────────────────────────────────────────────────────────────────┘
+								</pre>
+							</div>
+
+							<h3 id="arch-components">Component Responsibilities</h3>
+
+							<h4>Flask Application (Python)</h4>
+							<ul>
+								<li>Enhanced RAG pipeline with Qdrant integration</li>
+								<li>Multi-step reasoning with confidence scoring</li>
+								<li>Session management and conversation state</li>
+								<li>Parameter persistence and preset management</li>
+								<li>Real-time status monitoring and performance metrics</li>
+							</ul>
+
+							<h4>MCP Filesystem Server (Node.js)</h4>
+							<ul>
+								<li>File upload with automatic vectorization</li>
+								<li>Direct embedding generation (384-dim)</li>
+								<li>Semantic search API with Qdrant backend</li>
+								<li>System file protection and access control</li>
+								<li>RESTful API for file and search operations</li>
+							</ul>
+
+							<h4>Qdrant Vector Database</h4>
+							<ul>
+								<li>Persistent vector storage and indexing</li>
+								<li>High-performance similarity search</li>
+								<li>Collection management and monitoring</li>
+								<li>Built-in dashboard for vector visualization</li>
+								<li>Scalable architecture for large datasets</li>
+							</ul>
+
+							<h4>Ollama Server</h4>
+							<ul>
+								<li>Local LLM hosting and inference</li>
+								<li>Model management and switching</li>
+								<li>GPU acceleration support</li>
+								<li>Parameter-based text generation</li>
+							</ul>
+						</section>
+
+						<section class="docs-section" id="rag-pipeline">
+							<h2>Enhanced RAG Pipeline</h2>
+
+							<p>The core innovation of Local AI Stack is its vectorized RAG (Retrieval-Augmented Generation) pipeline that combines semantic search with multi-stage reasoning for unprecedented response quality and transparency.</p>
+
+							<div class="architecture-diagram">
+								<pre>
+									VECTORIZED RAG PIPELINE FLOW:
+
+									USER QUERY ──┐
+									│
+									CONTEXT FILES┼─→ [VECTORIZATION] ──┐
+									│    • EMBED QUERY      │
+									CONVERSATION │    • SEMANTIC SEARCH  │
+									HISTORY   ───┘    • RANK BY RELEVANCE│
+									│
+									▼
+									[STAGE 1: SEMANTIC ANALYSIS]
+									• ANALYZE QUERY INTENT
+									• SELECT RELEVANT CHUNKS
+									• SCORE CONTEXT QUALITY
+									│
+									▼
+									[STAGE 2: DELIBERATION]
+									• MULTI-STEP REASONING
+									• CONFIDENCE ASSESSMENT
+									• CITATION PLANNING
+									│
+									▼
+									[STAGE 3: RESPONSE GENERATION]
+									• GENERATE FINAL ANSWER
+									• APPLY REASONING INSIGHTS
+									• INCLUDE CITATIONS
+									• MAINTAIN CONTEXT
+									│
+									▼
+									ENHANCED RESPONSE + METADATA
+								</pre>
+							</div>
+
+							<h3 id="rag-stage1">Stage 1: Semantic Analysis</h3>
+							<p>The vectorization stage transforms queries and documents into semantic representations:</p>
+							<ul>
+								<li>
+									<strong>Query Embedding:</strong> Convert user questions into 384-dimensional vectors
+								</li>
+								<li>
+									<strong>Similarity Search:</strong> Find most relevant document chunks in Qdrant
+								</li>
+								<li>
+									<strong>Context Ranking:</strong> Score chunks by relevance with system file priority
+								</li>
+								<li>
+									<strong>Quality Assessment:</strong> Evaluate context completeness and coverage
+								</li>
+							</ul>
+
+							<h3 id="rag-stage2">Stage 2: Multi-Step Reasoning</h3>
+							<p>The deliberation stage uses enhanced reasoning to analyze the problem:</p>
+							<ul>
+								<li>
+									<strong>Problem Decomposition:</strong> Break complex queries into manageable components
+								</li>
+								<li>
+									<strong>Evidence Evaluation:</strong> Assess quality and relevance of available information
+								</li>
+								<li>
+									<strong>Pattern Recognition:</strong> Identify reasoning patterns and solution strategies
+								</li>
+								<li>
+									<strong>Hypothesis Formation:</strong> Generate and evaluate potential approaches
+								</li>
+								<li>
+									<strong>Logic Verification:</strong> Validate reasoning consistency and completeness
+								</li>
+								<li>
+									<strong>Strategy Synthesis:</strong> Combine insights into optimal response strategy
+								</li>
+							</ul>
+
+							<h3 id="rag-stage3">Stage 3: Response Generation</h3>
+							<p>The final stage produces enhanced responses with full transparency:</p>
+							<ul>
+								<li>
+									<strong>Contextual Answers:</strong> Responses informed by semantic search results
+								</li>
+								<li>
+									<strong>Smart Citations:</strong> Automatic source references with relevance scores
+								</li>
+								<li>
+									<strong>Confidence Metrics:</strong> Detailed confidence breakdowns and reasoning traces
+								</li>
+								<li>
+									<strong>Conversation Continuity:</strong> Maintain context across multi-turn conversations
+								</li>
+							</ul>
+						</section>
+
+						<section class="docs-section" id="reasoning">
+							<h2>Multi-Step Reasoning System</h2>
+
+							<p>The multi-step reasoning system provides unprecedented transparency into AI decision-making processes, allowing users to understand exactly how responses are formulated.</p>
+
+							<h3 id="reasoning-steps">6-Step Process</h3>
+							<div class="feature-grid">
+								<div class="feature-card">
+									<h4>1. Problem Decomposition</h4>
+									<p>Analyzes query complexity, identifies sub-components, and categorizes the type of reasoning required.</p>
+								</div>
+								<div class="feature-card">
+									<h4>2. Evidence Gathering</h4>
+									<p>Ranks available sources, assesses information quality, and identifies coverage gaps.</p>
+								</div>
+								<div class="feature-card">
+									<h4>3. Pattern Identification</h4>
+									<p>Recognizes reasoning patterns, selects appropriate problem-solving strategies, and maps solution approaches.</p>
+								</div>
+								<div class="feature-card">
+									<h4>4. Hypothesis Formation</h4>
+									<p>Generates candidate approaches, evaluates feasibility, and selects optimal strategy.</p>
+								</div>
+								<div class="feature-card">
+									<h4>5. Verification</h4>
+									<p>Validates logical consistency, checks completeness, and identifies potential errors or gaps.</p>
+								</div>
+								<div class="feature-card">
+									<h4>6. Synthesis</h4>
+									<p>Combines insights, structures final response, and prepares citation targets.</p>
+								</div>
+							</div>
+
+							<h3 id="reasoning-confidence">Confidence Scoring Algorithm</h3>
+							<div class="code-block">
+								<pre>
 									def calculate_confidence(context_quality, completeness, complexity):
 									"""
 									Multi-factor confidence scoring:
@@ -1066,112 +1048,110 @@
 									completeness_factor + complexity_factor))
 
 									return round(final_score, 1)
-								</code>
-							</pre>
-						</div>
-					</section>
-
-					<section class="docs-section" id="performance">
-						<h2>PERFORMANCE METRICS</h2>
-
-						<h3>PROCESSING SPEED COMPARISON</h3>
-						<table class="performance-table">
-							<thead>
-								<tr>
-									<th>QUERY TYPE</th>
-									<th>STANDARD MODE</th>
-									<th>VECTORIZED MODE</th>
-									<th>IMPROVEMENT</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>
-										<strong>SIMPLE Q&A</strong>
-									</td>
-									<td>~5-8s</td>
-									<td>~2-3s</td>
-									<td>60% FASTER</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>DOCUMENT ANALYSIS</strong>
-									</td>
-									<td>~15-25s</td>
-									<td>~4-6s</td>
-									<td>75% FASTER</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>MULTI-DOCUMENT SEARCH</strong>
-									</td>
-									<td>~30-45s</td>
-									<td>~8-12s</td>
-									<td>70% FASTER</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>COMPLEX REASONING</strong>
-									</td>
-									<td>~20-30s</td>
-									<td>~10-15s</td>
-									<td>50% FASTER</td>
-								</tr>
-							</tbody>
-						</table>
-
-						<h3>ACCURACY IMPROVEMENTS</h3>
-						<ul>
-							<li>
-								<strong>SEMANTIC RELEVANCE:</strong> 85% → 92% accuracy in context selection
-							</li>
-							<li>
-								<strong>CITATION PRECISION:</strong> 78% → 89% correct source attribution
-							</li>
-							<li>
-								<strong>ANSWER QUALITY:</strong> 82% → 91% user satisfaction rating
-							</li>
-							<li>
-								<strong>CONTEXT UTILIZATION:</strong> 65% → 88% effective context use
-							</li>
-						</ul>
-
-						<h3>RESOURCE UTILIZATION</h3>
-						<div class="tech-stack">
-							<div class="tech-item">
-								<h5>MEMORY USAGE</h5>
-								<p>
-									Base: 2GB<br/>+1GB per 1000 docs
-								</p>
+								</pre>
 							</div>
-							<div class="tech-item">
-								<h5>STORAGE</h5>
-								<p>
-									Vectors: ~50KB/doc<br/>Index: ~10MB/1000 docs
-								</p>
-							</div>
-							<div class="tech-item">
-								<h5>CPU USAGE</h5>
-								<p>
-									Indexing: ~30%<br/>Search: ~5% per query
-								</p>
-							</div>
-							<div class="tech-item">
-								<h5>GPU USAGE</h5>
-								<p>
-									Optional<br/>2-3x faster inference
-								</p>
-							</div>
-						</div>
-					</section>
+						</section>
 
-					<section class="docs-section" id="components">
-						<h2>CORE COMPONENTS</h2>
+						<section class="docs-section" id="performance">
+							<h2>Performance Metrics</h2>
 
-						<h3>PROJECT STRUCTURE</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3>Processing Speed Comparison</h3>
+							<table class="performance-table">
+								<thead>
+									<tr>
+										<th>Query Type</th>
+										<th>Standard Mode</th>
+										<th>Vectorized Mode</th>
+										<th>Improvement</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<strong>Simple Q&A</strong>
+										</td>
+										<td>~5-8s</td>
+										<td>~2-3s</td>
+										<td>60% Faster</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Document Analysis</strong>
+										</td>
+										<td>~15-25s</td>
+										<td>~4-6s</td>
+										<td>75% Faster</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Multi-Document Search</strong>
+										</td>
+										<td>~30-45s</td>
+										<td>~8-12s</td>
+										<td>70% Faster</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Complex Reasoning</strong>
+										</td>
+										<td>~20-30s</td>
+										<td>~10-15s</td>
+										<td>50% Faster</td>
+									</tr>
+								</tbody>
+							</table>
+
+							<h3>Accuracy Improvements</h3>
+							<ul>
+								<li>
+									<strong>Semantic Relevance:</strong> 85% → 92% accuracy in context selection
+								</li>
+								<li>
+									<strong>Citation Precision:</strong> 78% → 89% correct source attribution
+								</li>
+								<li>
+									<strong>Answer Quality:</strong> 82% → 91% user satisfaction rating
+								</li>
+								<li>
+									<strong>Context Utilization:</strong> 65% → 88% effective context use
+								</li>
+							</ul>
+
+							<h3>Resource Utilization</h3>
+							<div class="tech-stack">
+								<div class="tech-item">
+									<h5>Memory Usage</h5>
+									<p>
+										Base: 2GB<br/>+1GB per 1000 docs
+									</p>
+								</div>
+								<div class="tech-item">
+									<h5>Storage</h5>
+									<p>
+										Vectors: ~50KB/doc<br/>Index: ~10MB/1000 docs
+									</p>
+								</div>
+								<div class="tech-item">
+									<h5>CPU Usage</h5>
+									<p>
+										Indexing: ~30%<br/>Search: ~5% per query
+									</p>
+								</div>
+								<div class="tech-item">
+									<h5>GPU Usage</h5>
+									<p>
+										Optional<br/>2-3x faster inference
+									</p>
+								</div>
+							</div>
+						</section>
+
+						<section class="docs-section" id="components">
+							<h2>Core Components</h2>
+
+							<h3>Project Structure</h3>
+							<div class="code-block">
+								<pre>
 									local_ai_stack/
 									├── flask-app/                    # Main Flask application
 									│   ├── app.py                   # Enhanced RAG pipeline
@@ -1184,81 +1164,79 @@
 									│   └── context-files/          # Document storage
 									├── docker-compose.yml          # Service orchestration
 									└── README.md                   # Documentation
-								</code>
-							</pre>
-						</div>
+								</pre>
+							</div>
 
-						<h3>SERVICE DEPENDENCIES</h3>
-						<div class="architecture-diagram">
-							<pre>
-								FLASK APP ─────────┐
-								├─→ OLLAMA SERVER (LLM INFERENCE)
-								├─→ MCP SERVER (FILE MANAGEMENT)
-								└─→ QDRANT (VECTOR OPERATIONS)
+							<h3>Service Dependencies</h3>
+							<div class="architecture-diagram">
+								<pre>
+									FLASK APP ─────────┐
+									├─→ OLLAMA SERVER (LLM INFERENCE)
+									├─→ MCP SERVER (FILE MANAGEMENT)
+									└─→ QDRANT (VECTOR OPERATIONS)
 
-								MCP SERVER ────────┐
-								├─→ SHARED STORAGE (FILE SYSTEM)
-								└─→ QDRANT (VECTOR STORAGE)
+									MCP SERVER ────────┐
+									├─→ SHARED STORAGE (FILE SYSTEM)
+									└─→ QDRANT (VECTOR STORAGE)
 
-								QDRANT ────────────┐
-								└─→ PERSISTENT VOLUME (VECTOR DATA)
-							</pre>
-						</div>
-					</section>
+									QDRANT ────────────┐
+									└─→ PERSISTENT VOLUME (VECTOR DATA)
+								</pre>
+							</div>
+						</section>
 
-					<section class="docs-section" id="configuration">
-						<h2>CONFIGURATION SYSTEM</h2>
+						<section class="docs-section" id="configuration">
+							<h2>Configuration System</h2>
 
-						<h3 id="config-params">MODEL PARAMETERS</h3>
-						<table class="performance-table">
-							<thead>
-								<tr>
-									<th>PARAMETER</th>
-									<th>RANGE</th>
-									<th>DESCRIPTION</th>
-									<th>DEFAULT</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>
-										<strong>TEMPERATURE</strong>
-									</td>
-									<td>0.0 - 2.0</td>
-									<td>Controls randomness and creativity</td>
-									<td>0.7</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>TOP P</strong>
-									</td>
-									<td>0.0 - 1.0</td>
-									<td>Nucleus sampling threshold</td>
-									<td>0.9</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>TOP K</strong>
-									</td>
-									<td>1 - 100</td>
-									<td>Vocabulary limitation</td>
-									<td>40</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>REPEAT PENALTY</strong>
-									</td>
-									<td>0.5 - 2.0</td>
-									<td>Repetition control</td>
-									<td>1.1</td>
-								</tr>
-							</tbody>
-						</table>
+							<h3 id="config-params">Model Parameters</h3>
+							<table class="performance-table">
+								<thead>
+									<tr>
+										<th>Parameter</th>
+										<th>Range</th>
+										<th>Description</th>
+										<th>Default</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<strong>Temperature</strong>
+										</td>
+										<td>0.0 - 2.0</td>
+										<td>Controls randomness and creativity</td>
+										<td>0.7</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Top P</strong>
+										</td>
+										<td>0.0 - 1.0</td>
+										<td>Nucleus sampling threshold</td>
+										<td>0.9</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Top K</strong>
+										</td>
+										<td>1 - 100</td>
+										<td>Vocabulary limitation</td>
+										<td>40</td>
+									</tr>
+									<tr>
+										<td>
+											<strong>Repeat Penalty</strong>
+										</td>
+										<td>0.5 - 2.0</td>
+										<td>Repetition control</td>
+										<td>1.1</td>
+									</tr>
+								</tbody>
+							</table>
 
-						<h3 id="config-vector">VECTORIZATION SETTINGS</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="config-vector">Vectorization Settings</h3>
+							<div class="code-block">
+								<pre>
 									# Environment Variables for Vectorization
 									VECTOR_DB_URL=http://qdrant:6333
 									COLLECTION_NAME=documents
@@ -1268,14 +1246,12 @@
 									CHUNK_OVERLAP=50
 									FAST_MODE_CHUNKS=3
 									DETAILED_MODE_CHUNKS=5
-								</code>
-							</pre>
-						</div>
+								</pre>
+							</div>
 
-						<h3 id="config-presets">PRESET CONFIGURATIONS</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="config-presets">Preset Configurations</h3>
+							<div class="code-block">
+								<pre>
 									{
 									"creative": {
 									"temperature": 1.2,
@@ -1299,75 +1275,73 @@
 									"mode": "detailed"
 									}
 									}
-								</code>
-							</pre>
-						</div>
-					</section>
+								</pre>
+							</div>
+						</section>
 
-					<section class="docs-section" id="api">
-						<h2>API REFERENCE</h2>
+						<section class="docs-section" id="api">
+							<h2>API Reference</h2>
 
-						<h3 id="api-chat">CHAT ENDPOINTS</h3>
-						<div class="api-grid">
-							<div class="api-section">
-								<h5>ENHANCED CHAT</h5>
-								<code>POST /api/chat</code>
-								<p>RAG-powered chat with vector search and multi-step reasoning</p>
+							<h3 id="api-chat">Chat Endpoints</h3>
+							<div class="api-grid">
+								<div class="api-section">
+									<h5>Enhanced Chat</h5>
+									<code>POST /api/chat</code>
+									<p>RAG-powered chat with vector search and multi-step reasoning</p>
+								</div>
+								<div class="api-section">
+									<h5>Conversation History</h5>
+									<code>GET /api/chat/history</code>
+									<p>Retrieve conversation history with metadata</p>
+								</div>
+								<div class="api-section">
+									<h5>Clear History</h5>
+									<code>DELETE /api/chat/history</code>
+									<p>Clear all chat history</p>
+								</div>
 							</div>
-							<div class="api-section">
-								<h5>CONVERSATION HISTORY</h5>
-								<code>GET /api/chat/history</code>
-								<p>Retrieve conversation history with metadata</p>
-							</div>
-							<div class="api-section">
-								<h5>CLEAR HISTORY</h5>
-								<code>DELETE /api/chat/history</code>
-								<p>Clear all chat history</p>
-							</div>
-						</div>
 
-						<h3 id="api-vector">VECTOR OPERATIONS</h3>
-						<div class="api-grid">
-							<div class="api-section">
-								<h5>SEMANTIC SEARCH</h5>
-								<code>POST /search</code>
-								<p>Search context files using vector similarity</p>
+							<h3 id="api-vector">Vector Operations</h3>
+							<div class="api-grid">
+								<div class="api-section">
+									<h5>Semantic Search</h5>
+									<code>POST /search</code>
+									<p>Search context files using vector similarity</p>
+								</div>
+								<div class="api-section">
+									<h5>Vector Statistics</h5>
+									<code>GET /vectors/stats</code>
+									<p>Get vector database statistics and health</p>
+								</div>
+								<div class="api-section">
+									<h5>Collection Init</h5>
+									<code>POST /collections/init</code>
+									<p>Initialize or reset Qdrant collection</p>
+								</div>
 							</div>
-							<div class="api-section">
-								<h5>VECTOR STATISTICS</h5>
-								<code>GET /vectors/stats</code>
-								<p>Get vector database statistics and health</p>
-							</div>
-							<div class="api-section">
-								<h5>COLLECTION INIT</h5>
-								<code>POST /collections/init</code>
-								<p>Initialize or reset Qdrant collection</p>
-							</div>
-						</div>
 
-						<h3 id="api-files">FILE MANAGEMENT</h3>
-						<div class="api-grid">
-							<div class="api-section">
-								<h5>LIST FILES</h5>
-								<code>GET /api/files</code>
-								<p>List all files with vectorization status</p>
+							<h3 id="api-files">File Management</h3>
+							<div class="api-grid">
+								<div class="api-section">
+									<h5>List Files</h5>
+									<code>GET /api/files</code>
+									<p>List all files with vectorization status</p>
+								</div>
+								<div class="api-section">
+									<h5>Upload File</h5>
+									<code>POST /api/files</code>
+									<p>Upload file with automatic vectorization</p>
+								</div>
+								<div class="api-section">
+									<h5>Delete File</h5>
+									<code>DELETE /api/files/{filename}</code>
+									<p>Delete file and associated vectors</p>
+								</div>
 							</div>
-							<div class="api-section">
-								<h5>UPLOAD FILE</h5>
-								<code>POST /api/files</code>
-								<p>Upload file with automatic vectorization</p>
-							</div>
-							<div class="api-section">
-								<h5>DELETE FILE</h5>
-								<code>DELETE /api/files/{filename}</code>
-								<p>Delete file and associated vectors</p>
-							</div>
-						</div>
 
-						<h3 id="api-system">SYSTEM MONITORING</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="api-system">System Monitoring</h3>
+							<div class="code-block">
+								<pre>
 									# Health Checks
 									GET /api/system/info      # System information
 									GET /api/mcp/status       # MCP server status
@@ -1388,18 +1362,16 @@
 									"avg_reasoning_time_ms": 2100
 									}
 									}
-								</code>
-							</pre>
-						</div>
-					</section>
+								</pre>
+							</div>
+						</section>
 
-					<section class="docs-section" id="deployment">
-						<h2>DEPLOYMENT GUIDE</h2>
+						<section class="docs-section" id="deployment">
+							<h2>Deployment Guide</h2>
 
-						<h3 id="deploy-quick">QUICK START</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="deploy-quick">Quick Start</h3>
+							<div class="code-block">
+								<pre>
 									# 1. Clone and setup
 									git clone https://github.com/trevino293/local_ai_stack.git
 									cd local_ai_stack
@@ -1418,16 +1390,14 @@
 									curl http://localhost:3000/status
 
 									# 5. Access interfaces
-									open http://localhost:5000      # Main UI
+									open http://localhost:5000           # Main UI
 									open http://localhost:6333/dashboard  # Qdrant Dashboard
-								</code>
-							</pre>
-						</div>
+								</pre>
+							</div>
 
-						<h3 id="deploy-prod">PRODUCTION CONFIGURATION</h3>
-						<div class="code-block">
-							<pre>
-								<code>
+							<h3 id="deploy-prod">Production Configuration</h3>
+							<div class="code-block">
+								<pre>
 									# docker-compose.prod.yml
 									version: '3.8'
 									services:
@@ -1463,57 +1433,57 @@
 									memory: 8G
 									reservations:
 									memory: 4G
-								</code>
-							</pre>
-						</div>
+								</pre>
+							</div>
 
-						<h3 id="deploy-security">SECURITY CONSIDERATIONS</h3>
-						<ul style="list-style: none; padding-left: 0;">
-							<li style="padding: 10px 0;">
-								<strong>NETWORK SECURITY:</strong> Use reverse proxy with SSL/TLS termination
-							</li>
-							<li style="padding: 10px 0;">
-								<strong>AUTHENTICATION:</strong> Implement OAuth2 or JWT-based authentication
-							</li>
-							<li style="padding: 10px 0;">
-								<strong>INPUT VALIDATION:</strong> Sanitize all user inputs and file uploads
-							</li>
-							<li style="padding: 10px 0;">
-								<strong>RATE LIMITING:</strong> Implement API rate limiting to prevent abuse
-							</li>
-							<li style="padding: 10px 0;">
-								<strong>MONITORING:</strong> Set up logging and monitoring for security events
-							</li>
-							<li style="padding: 10px 0;">
-								<strong>UPDATES:</strong> Regular security updates for all dependencies
-							</li>
-						</ul>
-
-						<div class="highlight-box">
-							<h4>PRODUCTION CHECKLIST</h4>
-							<ul style="margin: 0; color: white;">
-								<li>☐ SSL/TLS certificates configured</li>
-								<li>☐ Environment variables secured</li>
-								<li>☐ Vector database backups automated</li>
-								<li>☐ Monitoring and alerting setup</li>
-								<li>☐ Rate limiting implemented</li>
-								<li>☐ Security headers configured</li>
-								<li>☐ Regular security audits scheduled</li>
+							<h3 id="deploy-security">Security Considerations</h3>
+							<ul>
+								<li>
+									<strong>Network Security:</strong> Use reverse proxy with SSL/TLS termination
+								</li>
+								<li>
+									<strong>Authentication:</strong> Implement OAuth2 or JWT-based authentication
+								</li>
+								<li>
+									<strong>Input Validation:</strong> Sanitize all user inputs and file uploads
+								</li>
+								<li>
+									<strong>Rate Limiting:</strong> Implement API rate limiting to prevent abuse
+								</li>
+								<li>
+									<strong>Monitoring:</strong> Set up logging and monitoring for security events
+								</li>
+								<li>
+									<strong>Updates:</strong> Regular security updates for all dependencies
+								</li>
 							</ul>
-						</div>
-					</section>
-				</main>
+
+							<div class="highlight-box">
+								<h4>Production Checklist</h4>
+								<ul style="margin: 0;">
+									<li>☐ SSL/TLS certificates configured</li>
+									<li>☐ Environment variables secured</li>
+									<li>☐ Vector database backups automated</li>
+									<li>☐ Monitoring and alerting setup</li>
+									<li>☐ Rate limiting implemented</li>
+									<li>☐ Security headers configured</li>
+									<li>☐ Regular security audits scheduled</li>
+								</ul>
+							</div>
+						</section>
+					</main>
+				</div>
 			</div>
 		</div>
 
 		<footer>
-			<div class="container">
+			<div class="docs-wrapper" style="padding: 40px 20px;">
 				<div style="
                 display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
                 gap: 30px; margin-bottom: 20px;
             ">
 					<div>
-						<h3 style="color: var(--accent-light-blue); margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px;">LOCAL AI STACK [OL-MCP]</h3>
+						<h3 style="color: var(--accent-light-blue); margin-bottom: 15px; font-size: 1.1rem;">Local AI Stack (OL-MCP)</h3>
 						<p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
 							Production-grade AI chat interface with vector database integration, persistent semantic search,
 							and advanced RAG capabilities. Built for enterprise performance with complete local control.
@@ -1521,9 +1491,9 @@
 					</div>
 
 					<div>
-						<h3 style="color: var(--accent-light-blue); margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px;">VECTOR DATABASE FEATURES</h3>
+						<h3 style="color: var(--accent-light-blue); margin-bottom: 15px; font-size: 1.1rem;">Vector Database Features</h3>
 						<ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; padding-left: 20px;">
-							<li>Qdrant Integration</li>
+							<li>Qdrant/ChromaDB Integration</li>
 							<li>Persistent Vector Storage</li>
 							<li>Real-time Semantic Search</li>
 							<li>Advanced Similarity Metrics</li>
@@ -1533,7 +1503,7 @@
 					</div>
 
 					<div>
-						<h3 style="color: var(--accent-light-blue); margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px;">RESOURCES</h3>
+						<h3 style="color: var(--accent-light-blue); margin-bottom: 15px; font-size: 1.1rem;">Resources</h3>
 						<div style="display: flex; flex-direction: column; gap: 8px;">
 							<a href="/docs" style="
                             color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
@@ -1570,7 +1540,7 @@
 				</div>
 
 				<div style="
-                border-top: 3px solid var(--border-color); padding-top: 20px;
+                border-top: 1px solid var(--border-color); padding-top: 20px;
                 display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
             ">
 					<div style="color: var(--text-secondary); font-size: 0.85rem;">
@@ -1579,28 +1549,28 @@
 					<div style="
                     display: flex; align-items: center; gap: 15px; color: var(--text-secondary); font-size: 0.85rem;
                 ">
-						<span>POWERED BY</span>
-						<div style="display: flex; align-items: center; gap: 0;">
+						<span>Powered by</span>
+						<div style="display: flex; align-items: center; gap: 12px;">
 							<span style="
-                            background: var(--bg-tertiary); padding: 4px 12px; 
-                            font-weight: 700; color: var(--accent-light-blue);
-                            border: 2px solid var(--border-color); margin-right: -2px;
-                        ">QDRANT</span>
+                            background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px;
+                            font-weight: 500; color: var(--accent-light-blue);
+                        ">Qdrant</span>
 							<span style="
-                            background: var(--bg-tertiary); padding: 4px 12px;
-                            font-weight: 700; color: var(--accent-light-blue);
-                            border: 2px solid var(--border-color); margin-right: -2px;
-                        ">FLASK</span>
+                            background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px;
+                            font-weight: 500; color: var(--accent-light-blue);
+                        ">ChromaDB</span>
 							<span style="
-                            background: var(--bg-tertiary); padding: 4px 12px;
-                            font-weight: 700; color: var(--accent-light-blue);
-                            border: 2px solid var(--border-color); margin-right: -2px;
-                        ">OLLAMA</span>
+                            background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px;
+                            font-weight: 500; color: var(--accent-light-blue);
+                        ">Flask</span>
 							<span style="
-                            background: var(--bg-tertiary); padding: 4px 12px;
-                            font-weight: 700; color: var(--accent-light-blue);
-                            border: 2px solid var(--border-color);
-                        ">DOCKER</span>
+                            background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px;
+                            font-weight: 500; color: var(--accent-light-blue);
+                        ">Ollama</span>
+							<span style="
+                            background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px;
+                            font-weight: 500; color: var(--accent-light-blue);
+                        ">Docker</span>
 						</div>
 					</div>
 				</div>
@@ -1608,16 +1578,37 @@
 		</footer>
 
 		<script>
+			// Toggle navigation sections
+			function toggleSection(event, sectionId) {
+			event.preventDefault();
+			const section = document.getElementById(sectionId);
+			const toggle = event.currentTarget.querySelector('.nav-toggle');
+
+			if (section.classList.contains('expanded')) {
+			section.classList.remove('expanded');
+			toggle.classList.add('collapsed');
+			} else {
+			section.classList.add('expanded');
+			toggle.classList.remove('collapsed');
+			}
+			}
+
 			// Smooth scrolling for navigation
-			document.querySelectorAll('.docs-nav a').forEach(link => {
+			document.querySelectorAll('.docs-nav a[href^="#"]').forEach(link => {
 			link.addEventListener('click', function(e) {
+			// Don't prevent default for toggleable sections
+			if (this.onclick) return;
+
 			e.preventDefault();
 			const targetId = this.getAttribute('href').substring(1);
 			const targetElement = document.getElementById(targetId);
+
 			if (targetElement) {
+			// Update active state
 			document.querySelectorAll('.docs-nav a').forEach(l => l.classList.remove('active'));
 			this.classList.add('active');
 
+			// Smooth scroll
 			targetElement.scrollIntoView({
 			behavior: 'smooth',
 			block: 'start'
@@ -1626,14 +1617,14 @@
 			});
 			});
 
-			// Navigation highlighting
+			// Highlight current section on scroll
 			function updateNavigation() {
 			const sections = document.querySelectorAll('.docs-section, h3[id]');
-			const navLinks = document.querySelectorAll('.docs-nav a');
+			const navLinks = document.querySelectorAll('.docs-nav a[href^="#"]');
 
 			let current = '';
 			sections.forEach(section => {
-			const sectionTop = section.offsetTop - 120;
+			const sectionTop = section.offsetTop - 100;
 			if (window.scrollY >= sectionTop) {
 			current = section.getAttribute('id');
 			}
@@ -1647,6 +1638,7 @@
 			});
 			}
 
+			// Throttle scroll events
 			let scrollTimeout;
 			window.addEventListener('scroll', () => {
 			if (scrollTimeout) {
@@ -1655,12 +1647,13 @@
 			scrollTimeout = setTimeout(updateNavigation, 10);
 			});
 
+			// Initial update
 			updateNavigation();
 
 			// Click to copy for code blocks
 			document.querySelectorAll('.code-block').forEach(block => {
 			block.addEventListener('click', function() {
-			const text = this.querySelector('pre code').textContent;
+			const text = this.querySelector('pre').textContent;
 			navigator.clipboard.writeText(text).then(() => {
 			const original = this.style.borderColor;
 			this.style.borderColor = 'var(--success)';

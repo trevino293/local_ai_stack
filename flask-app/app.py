@@ -35,6 +35,212 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+class SystemContextManager:
+    """Manages system context injection for all queries"""
+    
+    def __init__(self, mcp_server_url):
+        self.mcp_server_url = mcp_server_url
+        self.system_context_cache = None
+        self.last_cache_update = 0
+        self.cache_duration = 300  # 5 minutes
+        self.system_keywords = ['system', 'admin', 'config', 'context']
+        
+    def get_system_context(self):
+        """Get cached system context or refresh if needed"""
+        current_time = time.time()
+        
+        if (self.system_context_cache is None or 
+            current_time - self.last_cache_update > self.cache_duration):
+            self.system_context_cache = self._load_system_context()
+            self.last_cache_update = current_time
+            
+        return self.system_context_cache
+    
+    def _load_system_context(self):
+        """Load essential system context from system files"""
+        try:
+            # Search for system configuration files
+            response = requests.post(
+                f"{self.mcp_server_url}/search",
+                json={
+                    'query': 'system configuration features architecture api vectorization rag',
+                    'topK': 10,
+                    'minSimilarity': 0.1
+                },
+                timeout=10
+            )
+            
+            if response.ok:
+                results = response.json().get('results', [])
+                
+                # Extract system-specific information
+                system_info = {
+                    'system_name': 'Local AI Stack (OL-MCP)',
+                    'version': '3.0.0',
+                    'core_features': [],
+                    'architecture': [],
+                    'capabilities': [],
+                    'api_endpoints': [],
+                    'models': []
+                }
+                
+                for result in results:
+                    filename = result.get('filename', '').lower()
+                    text = result.get('text', '')
+                    
+                    # Parse system.json content
+                    if 'system.json' in filename:
+                        self._parse_system_json(text, system_info)
+                    
+                    # Parse config.json content
+                    elif 'config.json' in filename:
+                        self._parse_config_json(text, system_info)
+                    
+                    # Parse any other system files
+                    elif any(kw in filename for kw in self.system_keywords):
+                        self._parse_generic_system_file(text, system_info)
+                
+                # Build comprehensive system context
+                return self._build_system_context(system_info)
+                
+        except Exception as e:
+            logger.error(f"Failed to load system context: {e}")
+            
+        # Fallback system context
+        return self._get_fallback_context()
+    
+    def _parse_system_json(self, text, system_info):
+        """Extract information from system.json content"""
+        text_lower = text.lower()
+        
+        # Features
+        if 'vectorized rag' in text_lower or 'vectorization' in text_lower:
+            system_info['core_features'].append('Vectorized RAG with semantic search')
+        if 'multi-step reasoning' in text_lower or 'six-stage' in text_lower:
+            system_info['core_features'].append('Six-stage deliberation system')
+        if 'confidence scoring' in text_lower:
+            system_info['core_features'].append('AI confidence scoring (1-10)')
+        if 'citation tracking' in text_lower:
+            system_info['core_features'].append('Automatic citation tracking')
+        
+        # Architecture components
+        if 'qdrant' in text_lower:
+            system_info['architecture'].append('Qdrant vector database')
+        if 'flask' in text_lower:
+            system_info['architecture'].append('Flask web interface (port 5000)')
+        if 'ollama' in text_lower:
+            system_info['architecture'].append('Ollama LLM server (port 11434)')
+        if 'mcp' in text_lower or 'filesystem' in text_lower:
+            system_info['architecture'].append('MCP filesystem server (port 3000)')
+        
+        # API endpoints
+        if '/api/chat' in text:
+            system_info['api_endpoints'].append('POST /api/chat - Enhanced chat')
+        if '/api/files' in text:
+            system_info['api_endpoints'].append('GET/POST /api/files - File management')
+        if '/search' in text:
+            system_info['api_endpoints'].append('POST /search - Semantic search')
+        
+        # Capabilities
+        if 'semantic search' in text_lower:
+            system_info['capabilities'].append('Semantic document search')
+        if 'document processing' in text_lower or 'vectorization' in text_lower:
+            system_info['capabilities'].append('Automatic document vectorization')
+        if 'conversation history' in text_lower:
+            system_info['capabilities'].append('Persistent conversation history')
+    
+    def _parse_config_json(self, text, system_info):
+        """Extract information from config.json content"""
+        if 'response_framework' in text:
+            system_info['capabilities'].append('Enterprise response framework')
+        if 'gcp_specific' in text:
+            system_info['capabilities'].append('GCP integration guidance')
+        if 'risk_assessment' in text:
+            system_info['capabilities'].append('Risk assessment framework')
+    
+    def _parse_generic_system_file(self, text, system_info):
+        """Parse any other system-related files"""
+        text_lower = text.lower()
+        
+        # Look for model references
+        if 'llama' in text_lower:
+            system_info['models'].append('Llama models')
+        if 'mistral' in text_lower:
+            system_info['models'].append('Mistral')
+        if 'codellama' in text_lower:
+            system_info['models'].append('CodeLlama')
+    
+    def _build_system_context(self, system_info):
+        """Build a comprehensive system context string"""
+        context_parts = [
+            f"=== {system_info['system_name']} v{system_info['version']} ===",
+            "",
+            "CORE FEATURES:",
+            "• " + "\n• ".join(system_info['core_features'][:5]) if system_info['core_features'] 
+                else "• Vectorized RAG pipeline\n• Multi-step reasoning\n• Confidence scoring",
+            "",
+            "ARCHITECTURE:",
+            "• " + "\n• ".join(system_info['architecture'][:4]) if system_info['architecture']
+                else "• Flask app\n• MCP server\n• Qdrant vector DB\n• Ollama LLM",
+            "",
+            "KEY CAPABILITIES:",
+            "• " + "\n• ".join(system_info['capabilities'][:4]) if system_info['capabilities']
+                else "• Semantic search\n• Document vectorization\n• Chat history\n• Citation tracking",
+            ""
+        ]
+        
+        # Add API info if available
+        if system_info['api_endpoints']:
+            context_parts.extend([
+                "MAIN APIS:",
+                "• " + "\n• ".join(system_info['api_endpoints'][:3]),
+                ""
+            ])
+        
+        # Add model info if available
+        if system_info['models']:
+            context_parts.extend([
+                f"SUPPORTED MODELS: {', '.join(set(system_info['models']))}",
+                ""
+            ])
+        
+        return "\n".join(context_parts)
+    
+    def _get_fallback_context(self):
+        """Return fallback context when system files can't be loaded"""
+        return """=== Local AI Stack (OL-MCP) v3.0.0 ===
+
+CORE FEATURES:
+• Vectorized RAG pipeline with semantic search
+• Six-stage multi-step reasoning system
+• AI confidence scoring (1-10)
+• Automatic citation tracking
+• Fast and detailed processing modes
+
+ARCHITECTURE:
+• Flask web interface (port 5000)
+• MCP filesystem server (port 3000)
+• Qdrant vector database (port 6333)
+• Ollama LLM server (port 11434)
+
+KEY CAPABILITIES:
+• Semantic document search using embeddings
+• Automatic document vectorization on upload
+• Persistent conversation history
+• System file prioritization
+• Model parameter configuration
+
+MAIN APIS:
+• POST /api/chat - Enhanced chat with RAG
+• GET/POST /api/files - File management
+• POST /search - Semantic search
+
+This is a self-hosted AI system with complete data privacy."""
+
+# Initialize system context manager
+system_context_mgr = SystemContextManager(MCP_SERVER_URL)
+
+
 class SimpleRAGPipeline:
     """Simplified RAG pipeline focused on vector search"""
     
@@ -171,52 +377,189 @@ class SimpleRAGPipeline:
             logger.error(f"Search error: {e}")
             return []
     
+    # Add these methods to SimpleRAGPipeline class in flask-app/app.py
+
     def _build_context(self, search_results):
-        """Build context from search results"""
+        """Build context with system file prioritization and relevance scoring"""
         if not search_results:
             return "No relevant context found in the knowledge base."
-        
-        context_parts = []
-        for i, result in enumerate(search_results, 1):
-            filename = result.get('filename', 'unknown')
-            text = result.get('text', '')
-            similarity = result.get('similarity', 0)
-            
-            context_parts.append(f"[Source {i}: {filename} (relevance: {similarity:.2f})]")
-            context_parts.append(text)
-            context_parts.append("")
-        
-        return "\n".join(context_parts)
     
-    def _create_prompt(self, query, context, history, fast_mode):
-        """Create optimized prompt"""
-        prompt_parts = []
+        # Separate system files from regular files
+        system_results = []
+        regular_results = []
+    
+        for result in search_results:
+            filename = result.get('filename', '').lower()
+            if any(kw in filename for kw in ['system', 'admin', 'config', 'context']):
+                system_results.append(result)
+            else:
+                regular_results.append(result)
+    
+        context_parts = []
+    
+        # Always include system files first with clear marking
+        if system_results:
+            context_parts.append("=== SYSTEM CONTEXT ===")
+            for i, result in enumerate(system_results, 1):
+                filename = result.get('filename', 'unknown')
+                text = result.get('text', '')
+                similarity = result.get('similarity', 0)
+            
+                # For system.json, parse and include key sections
+                if 'system.json' in filename and '{' in text:
+                    try:
+                        # Extract key system information
+                        context_parts.append(f"[SYSTEM CONFIG - {filename}]")
+                        context_parts.append(self._extract_system_context(text))
+                    except:
+                        context_parts.append(f"[SYSTEM FILE {i}: {filename} (relevance: {similarity:.2f})]")
+                        context_parts.append(text)
+                else:
+                    context_parts.append(f"[SYSTEM FILE {i}: {filename} (relevance: {similarity:.2f})]")
+                    context_parts.append(text)
+                context_parts.append("")
+    
+        # Then include regular context
+        if regular_results:
+            context_parts.append("=== DOCUMENT CONTEXT ===")
+            for i, result in enumerate(regular_results, 1):
+                filename = result.get('filename', 'unknown')
+                text = result.get('text', '')
+                similarity = result.get('similarity', 0)
+            
+                context_parts.append(f"[Document {i}: {filename} (relevance: {similarity:.2f})]")
+                context_parts.append(text)
+                context_parts.append("")
+    
+        return "\n".join(context_parts)
+
+    def _extract_system_context(self, json_text):
+        """Extract key information from system.json content"""
+        try:
+            # Try to parse relevant parts
+            key_sections = []
         
+            # Look for specific patterns
+            if 'key_features' in json_text:
+                key_sections.append("Key System Features:")
+                # Extract features section
+                features_start = json_text.find('"key_features"')
+                if features_start > -1:
+                    # Simple extraction of the features section
+                    features_text = json_text[features_start:features_start+1000]
+                    key_sections.append(features_text[:500] + "...")
+        
+            if 'system_architecture' in json_text:
+                key_sections.append("\nSystem Architecture:")
+                arch_start = json_text.find('"system_architecture"')
+                if arch_start > -1:
+                    arch_text = json_text[arch_start:arch_start+800]
+                    key_sections.append(arch_text[:400] + "...")
+        
+            if 'api_endpoints' in json_text:
+                key_sections.append("\nAPI Information:")
+                api_start = json_text.find('"api_endpoints"')
+                if api_start > -1:
+                    api_text = json_text[api_start:api_start+600]
+                    key_sections.append(api_text[:300] + "...")
+        
+            return "\n".join(key_sections) if key_sections else json_text[:1000]
+        except:
+            return json_text[:1000]
+
+    def _create_prompt(self, query, context, history, fast_mode):
+        """Create enhanced prompt with automatic system context injection"""
+        prompt_parts = []
+    
+        # ALWAYS inject system context first
+        system_context = system_context_mgr.get_system_context()
+        prompt_parts.append(system_context)
+        prompt_parts.append("")
+    
+        # System instruction
+        prompt_parts.append("You are the AI assistant for the Local AI Stack system described above.")
+        prompt_parts.append("Use your knowledge of the system architecture and features when answering questions.")
+        prompt_parts.append("")
+    
         # Add conversation history if available
         if history and len(history) > 0:
-            prompt_parts.append("Previous conversation:")
+            prompt_parts.append("=== CONVERSATION HISTORY ===")
             for h in history[-3:]:  # Last 3 exchanges
-                prompt_parts.append(f"User: {h['message'][:100]}...")
-                prompt_parts.append(f"Assistant: {h['response'][:100]}...")
+                prompt_parts.append(f"User: {h['message'][:150]}...")
+                prompt_parts.append(f"Assistant: {h['response'][:150]}...")
             prompt_parts.append("")
-        
-        # Add context
+    
+        # Add retrieved context with clear separation
         if context and context != "No relevant context found in the knowledge base.":
-            prompt_parts.append("Relevant Information:")
+            prompt_parts.append("=== KNOWLEDGE BASE CONTEXT ===")
             prompt_parts.append(context)
             prompt_parts.append("")
-        
-        # Add the query
-        prompt_parts.append(f"Question: {query}")
+    
+        # Add the query with clear marking
+        prompt_parts.append("=== USER QUESTION ===")
+        prompt_parts.append(f"{query}")
         prompt_parts.append("")
-        
-        # Add instructions
+    
+        # Mode-specific instructions
+        prompt_parts.append("=== INSTRUCTIONS ===")
         if fast_mode:
-            prompt_parts.append("Please provide a clear, concise answer based on the information provided.")
+            prompt_parts.append("Provide a clear, concise answer based on the system information and context provided.")
+            prompt_parts.append("Focus on the most relevant information.")
         else:
-            prompt_parts.append("Please provide a comprehensive answer, explaining your reasoning and citing sources where appropriate.")
-        
+            prompt_parts.append("Provide a comprehensive answer using the system information and context provided.")
+            prompt_parts.append("1. Consider the system's architecture and capabilities")
+            prompt_parts.append("2. Include relevant details from the knowledge base")
+            prompt_parts.append("3. Explain your reasoning and cite specific sources when applicable")
+            prompt_parts.append("4. If the context doesn't contain enough information, acknowledge this")
+    
         return "\n".join(prompt_parts)
+
+    def _calculate_confidence(self, search_results, response):
+        """Enhanced confidence calculation based on context quality"""
+        if not search_results:
+            return 3  # Low confidence without context
+    
+        # Check for system file presence
+        has_system_context = any(
+            any(kw in r.get('filename', '').lower() for kw in ['system', 'admin', 'config'])
+            for r in search_results
+        )
+    
+        # Average similarity of results
+        avg_similarity = sum(r.get('similarity', 0) for r in search_results) / len(search_results)
+    
+        # Count high-quality results
+        high_quality_results = sum(1 for r in search_results if r.get('similarity', 0) > 0.5)
+    
+        # Base confidence calculation
+        if avg_similarity > 0.7 and high_quality_results >= 2:
+            base_confidence = 9
+        elif avg_similarity > 0.5:
+            base_confidence = 7
+        elif avg_similarity > 0.3:
+            base_confidence = 6
+        else:
+            base_confidence = 4
+    
+        # Boost for system context
+        if has_system_context:
+            base_confidence = min(10, base_confidence + 1)
+    
+        # Adjust based on response quality
+        if len(response) > 200 and response not in ["No response generated", "Error"]:
+            # Check if response seems to use context
+            context_terms = set()
+            for result in search_results:
+                text = result.get('text', '').lower()
+                context_terms.update(text.split()[:20])  # Key terms from context
+        
+            response_lower = response.lower()
+            context_usage = sum(1 for term in context_terms if term in response_lower)
+        
+            if context_usage > 10:
+                base_confidence = min(10, base_confidence + 1)
+    
+        return base_confidence
     
     def _call_ollama(self, model, prompt, params):
         """Call Ollama API"""
@@ -274,32 +617,32 @@ class SimpleRAGPipeline:
         
         return citations
     
-    def _calculate_confidence(self, search_results, response):
-        """Calculate confidence score"""
-        if not search_results:
-            return 3  # Low confidence without context
-        
-        # Average similarity of results
-        avg_similarity = sum(r.get('similarity', 0) for r in search_results) / len(search_results)
-        
-        # Base confidence on similarity and response quality
-        if avg_similarity > 0.7:
-            base_confidence = 8
-        elif avg_similarity > 0.5:
-            base_confidence = 7
-        elif avg_similarity > 0.3:
-            base_confidence = 6
-        else:
-            base_confidence = 5
-        
-        # Adjust based on response
-        if len(response) > 200 and response != "No response generated":
-            base_confidence = min(10, base_confidence + 1)
-        
-        return base_confidence
 
 # Initialize RAG pipeline
 rag_pipeline = SimpleRAGPipeline(OLLAMA_HOST, MCP_SERVER_URL)
+
+# Modify the process_query method to inject system context
+# Add this at the beginning of _create_prompt method:
+
+def _create_prompt(self, query, context, history, fast_mode):
+    """Create enhanced prompt with system context injection"""
+    prompt_parts = []
+    
+    # ALWAYS inject system context first
+    system_context = system_context_mgr.get_system_context()
+    prompt_parts.append("=== SYSTEM INFORMATION ===")
+    prompt_parts.append(system_context)
+    prompt_parts.append("")
+    
+    # System instruction
+    prompt_parts.append("You are the AI assistant for the Local AI Stack system described above.")
+    prompt_parts.append("Use your knowledge of the system architecture and features when answering questions.")
+    prompt_parts.append("")
+    
+    # Rest of the prompt building continues as before...
+    # [Previous prompt building code]
+
+
 
 @app.route('/')
 def index():

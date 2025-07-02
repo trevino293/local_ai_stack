@@ -4,7 +4,8 @@
 		<meta charset="UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<title>Local AI Stack (OL-MCP)</title>
-				<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+				<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+					<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 	<body style="min-height: 100vh; display: flex; flex-direction: column;">
 		<header>
@@ -64,7 +65,7 @@
 		</header>
 
 		<div class="container" style="flex: 1;">
-			<div class="main-grid">
+			<div class="main-grid" style="grid-template-columns: 385px 1fr 300px;">
 				<!-- Left Panel: Model & Files -->
 				<div class="panel">
 					<h2>Model & Configuration</h2>
@@ -177,6 +178,20 @@
 						</span>
 					</div>
 
+					<!-- Vector Database Info -->
+					<div style="
+                    background: var(--bg-tertiary); padding: 12px; border-radius: 6px; 
+                    margin-bottom: 20px; border: 1px solid var(--border-color);
+                ">
+						<div style="font-weight: 600; margin-bottom: 8px; color: var(--accent-light-blue);">
+							📊 Vector Database
+						</div>
+						<div style="font-size: 0.8rem; color: var(--text-secondary);">
+							Vectors: <span id="totalVectors" style="color: var(--text-primary);">0</span> •
+							Files: <span id="indexedFiles" style="color: var(--text-primary);">0</span>
+						</div>
+					</div>
+
 					<!-- Simple File Management -->
 					<h2>File Management</h2>
 					<div class="file-upload">
@@ -243,20 +258,6 @@
                         background: var(--bg-tertiary); color: var(--text-secondary);
                         border: 1px solid var(--border-color);
                     ">🔍 Detailed</button>
-					</div>
-
-					<!-- Vector Database Info -->
-					<div style="
-                    background: var(--bg-tertiary); padding: 12px; border-radius: 6px; 
-                    margin-bottom: 20px; border: 1px solid var(--border-color);
-                ">
-						<div style="font-weight: 600; margin-bottom: 8px; color: var(--accent-light-blue);">
-							📊 Vector Database
-						</div>
-						<div style="font-size: 0.8rem; color: var(--text-secondary);">
-							Vectors: <span id="totalVectors" style="color: var(--text-primary);">0</span> •
-							Files: <span id="indexedFiles" style="color: var(--text-primary);">0</span>
-						</div>
 					</div>
 
 					<!-- Chat History -->

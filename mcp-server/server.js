@@ -173,107 +173,186 @@ class SimpleVectorManager {
     }
 
     generateSimpleEmbedding(text) {
-        // Create a 384-dimensional vector using word features
+        // Create a 384-dimensional vector with better semantic features
         const vector = new Array(384).fill(0);
         const words = text.toLowerCase().split(/\s+/);
-        
-        // Feature extraction
+    
+        // Enhanced feature extraction
         const features = {
             // Word frequencies
             wordFreq: {},
-            // Character n-grams
-            bigrams: {},
-            // Semantic markers
+            // Semantic categories
+            techTerms: 0,
+            configTerms: 0,
+            actionTerms: 0,
+            // Document structure
             hasQuestions: /\?/.test(text),
             hasNumbers: /\d/.test(text),
-            avgWordLength: 0
+            hasJSON: /[{}[\]]/.test(text),
+            hasCode: /function|const|var|def|class|import/.test(text.toLowerCase()),
+            // Term importance
+            tfIdf: {},
+            avgWordLength: 0,
+            sentenceCount: text.split(/[.!?]+/).length,
+            // Bigrams and trigrams
+            bigrams: {},
+            trigrams: {}
         };
-        
+    
+        // Technical and domain-specific terms (higher weight)
+        const techKeywords = ['vector', 'embedding', 'rag', 'pipeline', 'semantic', 'search', 
+                             'model', 'llm', 'ai', 'machine learning', 'neural', 'database',
+                             'qdrant', 'ollama', 'flask', 'docker', 'api', 'configuration'];
+    
+        const configKeywords = ['system', 'config', 'admin', 'settings', 'parameter', 
+                               'environment', 'version', 'endpoint', 'url', 'port'];
+    
+        const actionKeywords = ['process', 'generate', 'create', 'search', 'analyze', 
+                               'compute', 'retrieve', 'store', 'update', 'delete'];
+    
         // Calculate features
         let totalLength = 0;
-        for (const word of words) {
+        for (let i = 0; i < words.length; i++) {
+            const word = words[i];
             if (word.length > 2) {
                 features.wordFreq[word] = (features.wordFreq[word] || 0) + 1;
                 totalLength += word.length;
-                
+            
+                // Check semantic categories
+                if (techKeywords.includes(word)) features.techTerms++;
+                if (configKeywords.includes(word)) features.configTerms++;
+                if (actionKeywords.includes(word)) features.actionTerms++;
+            
                 // Bigrams
-                for (let i = 0; i < word.length - 1; i++) {
-                    const bigram = word.substring(i, i + 2);
+                if (i < words.length - 1) {
+                    const bigram = `${word}_${words[i + 1]}`;
                     features.bigrams[bigram] = (features.bigrams[bigram] || 0) + 1;
+                }
+            
+                // Trigrams
+                if (i < words.length - 2) {
+                    const trigram = `${word}_${words[i + 1]}_${words[i + 2]}`;
+                    features.trigrams[trigram] = (features.trigrams[trigram] || 0) + 1;
                 }
             }
         }
-        
+    
         features.avgWordLength = words.length > 0 ? totalLength / words.length : 0;
-        
-        // Encode features into vector
-        let index = 0;
-        
-        // Word frequencies (use first 200 dimensions)
+    
+        // Calculate TF-IDF approximation
+        const docLength = words.length;
         Object.entries(features.wordFreq).forEach(([word, freq]) => {
-            const hash = this.hashString(word);
-            const pos = Math.abs(hash) % 200;
-            vector[pos] += freq / words.length;
+            // Simple TF-IDF: term frequency * inverse document frequency approximation
+            const tf = freq / docLength;
+            const idf = Math.log(10 / (1 + (features.wordFreq[word] || 1))); // Simplified IDF
+            features.tfIdf[word] = tf * idf;
         });
-        
-        // Bigrams (dimensions 200-350)
+    
+        // Encode features into vector with better distribution
+    
+        // 1. TF-IDF weighted word embeddings (dimensions 0-149)
+        Object.entries(features.tfIdf).forEach(([word, weight]) => {
+            const hash = this.hashString(word);
+            const pos = Math.abs(hash) % 150;
+            vector[pos] += weight;
+        });
+    
+        // 2. Bigrams (dimensions 150-249)
         Object.entries(features.bigrams).forEach(([bigram, freq]) => {
             const hash = this.hashString(bigram);
-            const pos = 200 + (Math.abs(hash) % 150);
-            vector[pos] += freq / (words.length * 2);
+            const pos = 150 + (Math.abs(hash) % 100);
+            vector[pos] += freq / (docLength * 2);
         });
-        
-        // Other features (dimensions 350-384)
+    
+        // 3. Trigrams (dimensions 250-299)
+        Object.entries(features.trigrams).forEach(([trigram, freq]) => {
+            const hash = this.hashString(trigram);
+            const pos = 250 + (Math.abs(hash) % 50);
+            vector[pos] += freq / (docLength * 3);
+        });
+    
+        // 4. Semantic category features (dimensions 300-349)
+        vector[300] = features.techTerms / Math.max(1, docLength) * 10;
+        vector[301] = features.configTerms / Math.max(1, docLength) * 10;
+        vector[302] = features.actionTerms / Math.max(1, docLength) * 10;
+    
+        // 5. Document structure features (dimensions 350-383)
         vector[350] = features.hasQuestions ? 1 : 0;
         vector[351] = features.hasNumbers ? 1 : 0;
-        vector[352] = features.avgWordLength / 10; // Normalize
-        
-        // Add some randomness for diversity
-        for (let i = 353; i < 384; i++) {
-            vector[i] = Math.random() * 0.1;
+        vector[352] = features.hasJSON ? 1 : 0;
+        vector[353] = features.hasCode ? 1 : 0;
+        vector[354] = features.avgWordLength / 10;
+        vector[355] = Math.min(1, features.sentenceCount / 10);
+    
+        // 6. Position encoding for beginning/middle/end of text
+        const position = this.getPositionFeatures(text);
+        vector[360] = position.beginning;
+        vector[361] = position.middle;
+        vector[362] = position.end;
+    
+        // Add controlled noise for diversity (last dimensions)
+        for (let i = 370; i < 384; i++) {
+            vector[i] = Math.random() * 0.05;
         }
-        
-        // Normalize vector
+    
+        // L2 Normalization
         const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
         if (magnitude > 0) {
             for (let i = 0; i < vector.length; i++) {
                 vector[i] /= magnitude;
             }
         }
-        
+    
         return vector;
     }
 
-    hashString(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
+    getPositionFeatures(text) {
+        // Encode position information (useful for long documents)
+        const sentences = text.split(/[.!?]+/);
+        const totalSentences = sentences.length;
+    
+        if (totalSentences <= 1) {
+            return { beginning: 1, middle: 0, end: 0 };
         }
-        return hash;
+    
+        return {
+            beginning: 0.5,
+            middle: 0.5,
+            end: 0.5
+        };
     }
 
+    hashString(str) {
+        // Better hash function for more uniform distribution
+        let hash = 5381;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) + hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash);
+    }
+    // Add this to mcp-server/server.js - Replace the searchSimilar method
+
     async searchSimilar(query, options = {}) {
-        const { topK = 5, minSimilarity = 0.1 } = options; // Lower threshold
-        
+        const { topK = 5, minSimilarity = 0.1 } = options;
+    
         try {
             // Generate embedding for query
             const queryVector = this.generateSimpleEmbedding(query);
-            
-            // Search in Qdrant
+        
+            // Search in Qdrant with increased limit to allow filtering
             const searchPayload = {
                 vector: queryVector,
-                limit: topK,
+                limit: topK * 3, // Get more results for re-ranking
                 with_payload: true,
                 with_vector: false
             };
-            
-            // Only add score threshold if it's positive
+        
             if (minSimilarity > 0) {
                 searchPayload.score_threshold = minSimilarity;
             }
-            
+        
             const searchResponse = await axios.post(
                 `${this.vectorDbUrl}/collections/${this.collectionName}/points/search`, 
                 searchPayload,
@@ -284,28 +363,52 @@ class SimpleVectorManager {
             );
 
             if (searchResponse.data.result) {
-                const results = searchResponse.data.result;
-                console.log(`🔍 Found ${results.length} results for "${query}"`);
+                let results = searchResponse.data.result;
+            
+                // Apply priority weighting for system files
+                results = results.map(r => {
+                    const filename = r.payload.filename || '';
+                    const isSystemFile = ['system', 'admin', 'config', 'context'].some(
+                        keyword => filename.toLowerCase().includes(keyword)
+                    );
                 
+                    // Boost system file scores by 30%
+                    const boostedScore = isSystemFile ? r.score * 1.3 : r.score;
+                
+                    return {
+                        ...r,
+                        originalScore: r.score,
+                        score: boostedScore,
+                        isSystemFile
+                    };
+                });
+            
+                // Re-sort by boosted scores and take topK
+                results.sort((a, b) => b.score - a.score);
+                results = results.slice(0, topK);
+            
+                console.log(`🔍 Found ${results.length} results for "${query}" (${results.filter(r => r.isSystemFile).length} system files)`);
+            
                 return {
                     success: true,
                     results: results.map(r => ({
                         filename: r.payload.filename,
                         text: r.payload.text,
-                        similarity: r.score,
+                        similarity: r.originalScore,
+                        boostedSimilarity: r.score,
                         chunk_index: r.payload.chunk_index,
-                        total_chunks: r.payload.total_chunks
+                        total_chunks: r.payload.total_chunks,
+                        isSystemFile: r.isSystemFile
                     })),
                     totalResults: results.length,
-                    method: 'vector-search'
+                    method: 'vector-search-weighted'
                 };
             }
-            
+        
             return { success: true, results: [], totalResults: 0 };
-            
+        
         } catch (error) {
             console.error(`❌ Search error:`, error.response?.data || error.message);
-            // Try keyword fallback
             return await this.keywordSearch(query, topK);
         }
     }

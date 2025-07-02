@@ -1,7 +1,7 @@
-version: '3.8'
+### (OL-MCP) Local AI Stack Docker Compose
 
 services:
-  # Vector Database - Qdrant for high-performance vector storage
+  # Primary Vector Database - Qdrant with built-in embedding support
   qdrant:
     image: qdrant/qdrant:v1.7.4
     container_name: vector-database
@@ -14,44 +14,69 @@ services:
       - QDRANT__SERVICE__HTTP_PORT=6333
       - QDRANT__SERVICE__GRPC_PORT=6334
       - QDRANT__LOG_LEVEL=INFO
+      # Enable built-in transformers
+      - QDRANT__SERVICE__ENABLE_CORS=true
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6333/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  # Alternative: ChromaDB (uncomment to use instead of Qdrant)
-  # chromadb:
-  #   image: chromadb/chroma:0.4.18
-  #   container_name: vector-database-chroma
+  # Alternative: All-in-one Qdrant with transformers (comment out above qdrant service to use this)
+  # qdrant-transformers:
+  #   image: qdrant/qdrant-transformers:latest
+  #   container_name: qdrant-with-transformers
   #   ports:
-  #     - "8000:8000"
+  #     - "6333:6333"
+  #     - "8080:8080"  # Transformers API
   #   volumes:
-  #     - chroma_data:/chroma/chroma
+  #     - qdrant_data:/qdrant/storage
+  #     - transformers_cache:/root/.cache/huggingface
   #   environment:
-  #     - CHROMA_SERVER_HOST=0.0.0.0
-  #     - CHROMA_SERVER_HTTP_PORT=8000
-  #     - PERSIST_DIRECTORY=/chroma/chroma
+  #     - QDRANT_HOST=0.0.0.0
+  #     - TRANSFORMERS_CACHE=/root/.cache/huggingface
+  #     - DEFAULT_MODEL=sentence-transformers/all-MiniLM-L6-v2
   #   restart: unless-stopped
 
-  # Enhanced Embedding Service with vector DB integration
-  embedding-service:
+  # Alternative: Weaviate with built-in vectorization
+  # weaviate:
+  #   image: semitechnologies/weaviate:1.23.7
+  #   container_name: weaviate-vectordb
+  #   ports:
+  #     - "6333:8080"
+  #   environment:
+  #     - QUERY_DEFAULTS_LIMIT=25
+  #     - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+  #     - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+  #     - DEFAULT_VECTORIZER_MODULE=text2vec-transformers
+  #     - ENABLE_MODULES=text2vec-transformers
+  #     - TRANSFORMERS_INFERENCE_API=http://t2v-transformers:8080
+  #   volumes:
+  #     - weaviate_data:/var/lib/weaviate
+  #   restart: unless-stopped
+
+  # # Weaviate transformer module (if using Weaviate)
+  # t2v-transformers:
+  #   image: semitechnologies/transformers-inference:sentence-transformers-all-MiniLM-L6-v2
+  #   container_name: weaviate-transformers
+  #   environment:
+  #     - ENABLE_CUDA=0
+  #   restart: unless-stopped
+
+  # Simplified Embedding Service (now just a proxy to vector DB)
+  embedding-proxy:
     build: 
-      context: ./embedding-service
+      context: ./embedding-proxy
       dockerfile: Dockerfile
-    container_name: embedding-service
+    container_name: embedding-proxy
     ports:
       - "8080:8080"
     environment:
-      - FLASK_ENV=production
-      - VECTOR_DB_TYPE=qdrant  # or 'chroma'
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-      - VECTOR_COLLECTION=document_embeddings
-      - BATCH_SIZE=32
+      - VECTOR_DB_URL=http://qdrant:6333
+      - VECTOR_DB_TYPE=qdrant
+      - EMBEDDING_ENDPOINT=http://qdrant:6333/collections/documents/points/search
     depends_on:
       qdrant:
         condition: service_healthy
@@ -61,9 +86,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
 
-  # Ollama LLM Server
+  # Ollama LLM Server (unchanged)
   ollama:
     image: ollama/ollama:latest
     container_name: ollama-server
@@ -83,7 +107,7 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
-  # Enhanced MCP Filesystem with Vector DB integration
+  # Enhanced MCP Filesystem (simplified for direct vector DB integration)
   mcp-filesystem:
     build: 
       context: ./mcp-server
@@ -95,15 +119,14 @@ services:
       - ./shared-data/context-files:/workspace
     environment:
       - NODE_ENV=production
-      - EMBEDDING_SERVICE=http://embedding-service:8080
+      - VECTOR_DB_URL=http://qdrant:6333
       - VECTOR_DB_TYPE=qdrant
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - COLLECTION_NAME=document_embeddings
+      - COLLECTION_NAME=documents
+      - EMBEDDING_PROXY_URL=http://embedding-proxy:8080
     depends_on:
-      embedding-service:
-        condition: service_healthy
       qdrant:
+        condition: service_healthy
+      embedding-proxy:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -111,9 +134,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
 
-  # Enhanced Flask Application
+  # Flask Application (simplified embedding service calls)
   flask-app:
     build: 
       context: ./flask-app
@@ -127,17 +149,15 @@ services:
       - FLASK_ENV=production
       - OLLAMA_HOST=http://ollama:11434
       - MCP_SERVER_URL=http://mcp-filesystem:3000
-      - EMBEDDING_SERVICE_URL=http://embedding-service:8080
       - VECTOR_DB_URL=http://qdrant:6333
-      - REDIS_URL=redis://redis:6379/0  # For caching
+      - EMBEDDING_PROXY_URL=http://embedding-proxy:8080
     depends_on:
       - ollama
       - mcp-filesystem
-      - embedding-service
       - qdrant
     restart: unless-stopped
 
-  # Redis for caching and session management
+  # Redis for caching (unchanged)
   redis:
     image: redis:7-alpine
     container_name: redis-cache
@@ -153,28 +173,18 @@ services:
       timeout: 10s
       retries: 3
 
-  # Vector Database Admin UI (optional)
-  qdrant-web-ui:
-    image: qdrant/qdrant-web-ui:latest
-    container_name: qdrant-web-ui
-    ports:
-      - "3001:80"
-    environment:
-      - QDRANT_API_URL=http://qdrant:6333
-    depends_on:
-      - qdrant
-    restart: unless-stopped
-
 volumes:
   ollama_data:
     driver: local
   qdrant_data:
     driver: local
-  chroma_data:
+  transformers_cache:
+    driver: local
+  weaviate_data:
     driver: local
   redis_data:
     driver: local
 
 networks:
   default:
-    name: local-ai-stack-network
+    name: enhanced-ai-stack-network

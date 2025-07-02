@@ -264,20 +264,8 @@ Generate a detailed, well-reasoned response:"""
         return options
     
     def _semantic_search(self, query, top_k=3, min_similarity=0.25, filters=None):
-        """Enhanced semantic search via embedding proxy with comprehensive error handling"""
-        
-        search_start_time = time.time()
-        
         try:
-            # First, check embedding proxy health
-            proxy_health = self._check_embedding_proxy_health()
-            if not proxy_health['healthy']:
-                logger.warning(f"Embedding proxy unhealthy: {proxy_health.get('error', 'Unknown error')}")
-                return []
-            
-            logger.info(f"Vector search: '{query[:30]}...' (top_k={top_k}, min_similarity={min_similarity})")
-            
-            # Perform search via MCP server (which uses embedding proxy)
+            # Direct search via MCP server (no embedding proxy needed)
             response = requests.post(f"{self.mcp_server_url}/search", 
                 json={
                     'query': query,
@@ -285,47 +273,15 @@ Generate a detailed, well-reasoned response:"""
                     'minSimilarity': min_similarity,
                     'filters': filters or {}
                 },
-                timeout=30,  # Increased timeout for complex queries
-                headers={'Content-Type': 'application/json'}
+                timeout=30
             )
-            
-            search_time = round((time.time() - search_start_time) * 1000)
-            
+        
             if response.ok:
                 data = response.json()
-                results = data.get('results', [])
-                search_stats = data.get('searchStats', {})
-                
-                # Log comprehensive search performance
-                avg_similarity = sum(r.get('similarity', 0) for r in results) / len(results) if results else 0
-                logger.info(f"Search completed: {len(results)} results, "
-                           f"avg similarity: {avg_similarity:.3f}, "
-                           f"time: {search_time}ms, "
-                           f"vector DB: {data.get('vectorDatabase', 'unknown')}")
-                
-                # Enhance results with comprehensive metadata
-                for result in results:
-                    result.update({
-                        'embedding_type': 'prebuilt',
-                        'vector_database': data.get('vectorDatabase', 'unknown'),
-                        'embedding_method': data.get('processingMethod', 'production'),
-                        'search_time_ms': search_time,
-                        'proxy_url': self.embedding_proxy_url,
-                        'quality_score': self._calculate_quality_score(result.get('similarity', 0))
-                    })
-                
-                return results
-            else:
-                logger.error(f"Search failed: {response.status_code} - {response.text}")
-                return []
-                
-        except requests.exceptions.Timeout:
-            search_time = round((time.time() - search_start_time) * 1000)
-            logger.error(f"Search timeout after {search_time}ms")
+                return data.get('results', [])
             return []
         except Exception as e:
-            search_time = round((time.time() - search_start_time) * 1000)
-            logger.error(f"Semantic search error after {search_time}ms: {e}")
+            logger.error(f"Search error: {e}")
             return []
     
     def _check_embedding_proxy_health(self):

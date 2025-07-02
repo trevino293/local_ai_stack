@@ -51,84 +51,60 @@ class VectorFileManager {
     }
 
     async processFile(filename, content) {
-        console.log(`Processing file: ${filename} (${content.length} chars)`);
-        
         try {
-            const response = await axios.post(`${this.embeddingProxyUrl}/embed/document`, {
-                filename: filename,
-                content: content,
-                chunk_size: 512,
-                overlap: 50
-            }, { 
-                timeout: 30000,
-                headers: {'Content-Type': 'application/json'}
-            });
-
-            if (response.data.status === 'success') {
-                console.log(`✅ Processed ${filename}: ${response.data.chunks_created} chunks`);
-                
-                fileMetadataCache.set(filename, {
-                    processed: true,
-                    chunks: response.data.chunks_created,
-                    lastProcessed: new Date().toISOString()
-                });
-
-                return {
-                    success: true,
-                    chunks: response.data.chunks_created,
-                    method: response.data.processing_method
-                };
-            } else {
-                throw new Error(response.data.error || 'Processing failed');
-            }
-        } catch (error) {
-            console.error(`❌ Failed to process file ${filename}:`, error.message);
-            
-            fileMetadataCache.set(filename, {
-                processed: false,
-                error: error.message,
-                lastAttempted: new Date().toISOString()
-            });
-
+            // Create text chunks
+            const chunks = this.createChunks(content);
+        
+            // Store with Qdrant's built-in indexing
+            const points = chunks.map((chunk, i) => ({
+                id: `${filename}_${i}`,
+                payload: {
+                    content: chunk,
+                    filename: filename,
+                    chunk_index: i
+                }
+            }));
+        
+            const response = await axios.put(
+                `${VECTOR_DB_URL}/collections/${this.collection_name}/points`,
+                { points },
+                { params: { wait: "true" } }
+            );
+        
             return {
-                success: false,
-                error: error.message
+                success: response.status === 200,
+                chunks: chunks.length
             };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
     }
 
     async searchSimilar(query, options = {}) {
         const { topK = 5, minSimilarity = 0.3 } = options;
-        
-        console.log(`🔍 Searching for: "${query}" (topK: ${topK})`);
-        
+    
         try {
-            const response = await axios.post(`${this.embeddingProxyUrl}/search`, {
-                query: query,
-                topK: topK,
-                minSimilarity: minSimilarity
-            }, { 
-                timeout: 10000,
-                headers: {'Content-Type': 'application/json'}
-            });
+            // Use Qdrant's search with raw text
+            const response = await axios.post(`${VECTOR_DB_URL}/collections/${this.collection_name}/points/search`, {
+                vector: query,  // Qdrant will handle text->vector conversion
+                limit: topK,
+                with_payload: true,
+                score_threshold: minSimilarity,
+                params: {
+                    indexed_only: true
+                }
+            }, { timeout: 10000 });
 
-            if (response.data.results) {
-                console.log(`✅ Search returned ${response.data.results.length} results`);
+            if (response.data.result) {
                 return {
                     success: true,
-                    results: response.data.results,
-                    totalResults: response.data.total_results || response.data.results.length
+                    results: response.data.result
                 };
-            } else {
-                return { success: true, results: [], totalResults: 0 };
             }
+            return { success: true, results: [] };
         } catch (error) {
-            console.error(`❌ Search failed:`, error.message);
-            return {
-                success: false,
-                error: error.message,
-                results: []
-            };
+            console.error(`Search failed:`, error.message);
+            return { success: false, error: error.message, results: [] };
         }
     }
 

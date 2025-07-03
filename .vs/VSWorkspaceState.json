@@ -1,16 +1,15 @@
 {
   "ExpandedNodes": [
     "",
-    "\\assets",
-    "\\embedding-service",
     "\\flask-app",
     "\\flask-app\\static",
     "\\flask-app\\static\\css",
     "\\flask-app\\static\\images",
+    "\\flask-app\\static\\js",
+    "\\flask-app\\templates",
     "\\mcp-server",
     "\\shared-data",
     "\\shared-data\\context-files"
   ],
-  "SelectedNode": "\\flask-app\\static\\js\\main.js",
   "PreviewInSolutionExplorer": true
 }
